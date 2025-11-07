@@ -122,7 +122,7 @@ def C_of_p(p):
 # ---- Settings you can change ----
 MU_LIMIT = 9e-5
 mass_list = [1e4, 1e5, 1e7]     # four distinct masses (Msun)
-p_values  = [2.0,  1.0, 0.6]     # plot both on same figure
+p_values  = [0.6]     # plot both on same figure
 s2tilde_grid = np.logspace(-7, -1, 400)  # x-axis = σ̃^2 (NCS parameter)
 
 # ---- Plot all 8 curves ----
@@ -187,133 +187,234 @@ def sigma_true_for_beta(beta_target, p, zeta_c=0.67,
 
 
 
-# === Plot A: β vs true variance σ^2 for your p_values ===
-s2_true_grid = np.logspace(-10, -1, 400)
+# # === Plot A: β vs true variance σ^2 for your p_values ===
+# s2_true_grid = np.logspace(-10, -1, 400)
 
 
 
-# === Active version using fig/ax and LaTeX-bold strings ===
-figA, axA = plt.subplots(figsize=(10,7))
+# # === Active version using fig/ax and LaTeX-bold strings ===
+# figA, axA = plt.subplots(figsize=(10,7))
+
+# # for p in p_values:
+# #     beta_vals = [beta_from_sigma_true(np.sqrt(s2), p) for s2 in s2_true_grid]
+# #     axA.plot(s2_true_grid, beta_vals, lw=2.5, label=rf"$p={p:g}$")
+
+
+# # axA.text(7e-7, 1.44e-259,
+# #          r"$\beta = \int_{0.67}^{\infty} \frac{1}{2\sqrt{2}\,\sigma_g\, \Gamma \left( 1 + \frac{1}{p} \right)} \exp \left[- \left(\frac{\zeta}{\sqrt{2}\,\sigma_g}\right)^p\right]\,{\rm d}\zeta$",
+# #          fontsize=18, fontweight='bold', color='brown',
+# #          va='center', ha='center', rotation='horizontal',
+# #          bbox={'facecolor': 'gray', 'alpha': 0.12, 'pad': 4.5},
+# #          zorder=100, clip_on=False)
+
+
 
 # for p in p_values:
 #     beta_vals = [beta_from_sigma_true(np.sqrt(s2), p) for s2 in s2_true_grid]
 #     axA.plot(s2_true_grid, beta_vals, lw=2.5, label=rf"$p={p:g}$")
 
 
-# axA.text(7e-7, 1.44e-259,
-#          r"$\beta = \int_{0.67}^{\infty} \frac{1}{2\sqrt{2}\,\sigma_g\, \Gamma \left( 1 + \frac{1}{p} \right)} \exp \left[- \left(\frac{\zeta}{\sqrt{2}\,\sigma_g}\right)^p\right]\,{\rm d}\zeta$",
-#          fontsize=18, fontweight='bold', color='brown',
-#          va='center', ha='center', rotation='horizontal',
-#          bbox={'facecolor': 'gray', 'alpha': 0.12, 'pad': 4.5},
-#          zorder=100, clip_on=False)
+# # plt.axvline(x=1.364e-4, color='gray', linestyle='--', lw=2)
+# # plt.axvline(x=3.41e-5, color='gray', linestyle='--', lw=2)
+# xv = 1.84e-3
+# y_target = 2.4e-55
 
-
-
-for p in p_values:
-    beta_vals = [beta_from_sigma_true(np.sqrt(s2), p) for s2 in s2_true_grid]
-    axA.plot(s2_true_grid, beta_vals, lw=2.5, label=rf"$p={p:g}$")
-
-
-plt.text(
-    7e-7, 1.44e-269,
-    r"$\boldsymbol{\beta = \int_{0.67}^{\infty} \frac{1}{2\sqrt{2}\,\sigma_g\, \Gamma \left( 1 + \frac{1}{p} \right)} \exp \left[- \left(\frac{\zeta}{\sqrt{2}\,\sigma_g}\right)^p\right]\,{\rm d}\zeta}$",
-    fontsize=20, fontweight='bold', color='brown',
-    verticalalignment='center', horizontalalignment='center', rotation='horizontal',
-    bbox={'facecolor': 'lightgray', 'alpha': 0.8, 'pad': 7.5}
-)
-
-
-# plt.axvline(x=1.364e-4, color='gray', linestyle='--', lw=2)
-# plt.axvline(x=3.41e-5, color='gray', linestyle='--', lw=2)
-xv = 1.84e-3
-y_target = 2.4e-55
-
-# get bottom of current axis (data coordinates)
-ymin, ymax = axA.get_ylim()
+# # get bottom of current axis (data coordinates)
+# ymin, ymax = axA.get_ylim()
     
-# ensure the target is within the axis range (optional)
-# if needed, set limits: ax.set_ylim(min(ymin, y_target*0.9), ymax)
+# # ensure the target is within the axis range (optional)
+# # if needed, set limits: ax.set_ylim(min(ymin, y_target*0.9), ymax)
 
-# draw vertical line from bottom to target y
-axA.plot([1.84e-3, 1.83e-3], [ymin, 2.4e-55], color='dimgrey', linestyle=':', lw=2)
-axA.plot([4.616e-4, 4.616e-4], [ymin, 7.42e-22], color='dimgrey', linestyle=':', lw=2)
-# axA.plot([1.364e-4, 1.364e-4], [ymin, 7.42e-22], color='dimgrey', linestyle=':', lw=2)
-axA.plot([3.41e-5, 3.41e-5], [ymin, 1e-72], color='dimgrey', linestyle=':', lw=2)
-axA.plot([8.678e-7, 8.678e-7], [ymin, 1e-60], color='dimgrey', linestyle=':', lw=2)
-axA.plot([1.1536e-5, 8.678e-7], [ymin, 1e-25], color='dimgrey', linestyle=':', lw=2)
-
-
-axA.plot(1.84e-3, 2.4e-55, marker='o', markersize=8,
-         markerfacecolor='magenta', markeredgecolor='dimgrey', markeredgewidth=1.2, zorder=10)
-axA.plot(4.616e-4, 7.42e-22, marker='o', markersize=8,
-         markerfacecolor='magenta', markeredgecolor='dimgrey', markeredgewidth=1.2, zorder=10)
-axA.plot(3.4e-5, 1e-72, marker='o', markersize=8,
-         markerfacecolor='purple', markeredgecolor='dimgrey', markeredgewidth=1.2, zorder=10)
-axA.plot(8.67e-7, 7.52e-60, marker='o', markersize=8,
-         markerfacecolor='purple', markeredgecolor='dimgrey', markeredgewidth=1.2, zorder=10)
+# # draw vertical line from bottom to target y
+# axA.plot([1.84e-3, 1.83e-3], [ymin, 2.4e-55], color='dimgrey', linestyle=':', lw=2)
+# axA.plot([4.616e-4, 4.616e-4], [ymin, 7.42e-22], color='dimgrey', linestyle=':', lw=2)
+# # axA.plot([1.364e-4, 1.364e-4], [ymin, 7.42e-22], color='dimgrey', linestyle=':', lw=2)
+# axA.plot([3.41e-5, 3.41e-5], [ymin, 1e-72], color='dimgrey', linestyle=':', lw=2)
+# axA.plot([8.678e-7, 8.678e-7], [ymin, 1e-60], color='dimgrey', linestyle=':', lw=2)
+# # plt.axvline(x=1.1536e-5, color='gray', linestyle='--', lw=2)
+# axA.plot([1.1536e-5, 1.1536e-5], [ymin, 3.4e-122], color='dimgrey', linestyle=':', lw=2)
+# axA.plot([2.566e-6, 2.566e-6], [ymin, 3.4e-43], color='dimgrey', linestyle=':', lw=2)
 
 
-
-axA.set_ylim(1e-320, 1e8)
-axA.set_yscale("log")
-axA.set_xscale("log"); axA.set_yscale("log")
-axA.set_xlabel(r"Variance  $\sigma^2$ ", fontsize=20)
-axA.set_ylabel(r"PBH mass fraction at formation  $\beta$", fontsize=20)
-# axA.set_title(r"$\beta$ vs $\sigma^2$  (NCS $p$-PDF, $\zeta_c=0.67$)")
-axA.set_xlim(8e-10, 1e-1)
-
-
-
-
-
-
-
-
-# axA.legend(loc='lower left', fontsize=15, frameon=False, handlelength=1.5,
-#         handletextpad=0.5, borderpad=0.5, labelspacing=0.5, facecolor='brown', edgecolor='brown',alpha=0.1)
-axA.grid(True, ls="--", alpha=0.7)
+# axA.plot(1.84e-3, 2.4e-55, marker='o', markersize=10,
+#          markerfacecolor='magenta', markeredgecolor='dimgrey', markeredgewidth=1.2, zorder=10)
+# axA.plot(4.616e-4, 7.42e-22, marker='o', markersize=10,
+#          markerfacecolor='magenta', markeredgecolor='dimgrey', markeredgewidth=1.2, zorder=10)
+# axA.plot(3.4e-5, 1e-72, marker='o', markersize=10,
+#          markerfacecolor='purple', markeredgecolor='dimgrey', markeredgewidth=1.2, zorder=10)
+# axA.plot(2.566e-6, 3.4e-43, marker='o', markersize=10,
+#          markerfacecolor='purple', markeredgecolor='dimgrey', markeredgewidth=1.2, zorder=10)
+# axA.plot(1.1536e-5, 3.4e-122, marker='o', markersize=10,
+#          markerfacecolor='teal', markeredgecolor='dimgrey', markeredgewidth=1.2, zorder=10)
+# axA.plot(2.566e-6, 3.4e-43, marker='o', markersize=10,
+#          markerfacecolor='purple', markeredgecolor='dimgrey', markeredgewidth=1.2, zorder=10)
+# axA.plot(8.67e-7, 7.9e-60, marker='o', markersize=10,
+#          markerfacecolor='teal', markeredgecolor='dimgrey', markeredgewidth=1.2, zorder=10)
 
 
-#Annotations for Plot A
+# axA.set_ylim(1e-320, 1e8)
+# axA.set_yscale("log")
+# axA.set_xscale("log"); axA.set_yscale("log")
+# axA.set_xlabel(r"Variance  $\sigma^2$ ", fontsize=20)
+# axA.set_ylabel(r"PBH mass fraction at formation  $\beta$", fontsize=20)
+# # axA.set_title(r"$\beta$ vs $\sigma^2$  (NCS $p$-PDF, $\zeta_c=0.67$)")
+# axA.set_xlim(8e-10, 1e-1)
 
-# plt.text(7e-7, 1.44e-259, r"$\beta = \int_{0.67}^{\infty} \frac{1}{2\sqrt{2}\,\sigma_g\, \Gamma \left( 1 + \frac{1}{p} \right)} \exp \left[- \left(\frac{\zeta}{\sqrt{2}\,\sigma_g}\right)^p\right]\,{\rm d}\zeta$", fontsize=18, fontweight='bold', color='brown',
+
+
+
+
+
+
+
+# # axA.legend(loc='lower left', fontsize=15, frameon=False, handlelength=1.5,
+# #         handletextpad=0.5, borderpad=0.5, labelspacing=0.5, facecolor='brown', edgecolor='brown',alpha=0.1)
+# axA.grid(True, ls="--", alpha=0.7)
+
+
+# #Annotations for Plot A
+
+# # plt.text(7e-7, 1.44e-259, r"$\beta = \int_{0.67}^{\infty} \frac{1}{2\sqrt{2}\,\sigma_g\, \Gamma \left( 1 + \frac{1}{p} \right)} \exp \left[- \left(\frac{\zeta}{\sqrt{2}\,\sigma_g}\right)^p\right]\,{\rm d}\zeta$", fontsize=18, fontweight='bold', color='brown',
+# #         verticalalignment='center', horizontalalignment='center', rotation='horizontal',
+# #         bbox={'facecolor': 'gray', 'alpha': 0.12, 'pad': 4.5})
+
+
+
+# plt.text(
+#     1.2e-6, 1.44e-289,
+#     r"$\boldsymbol{\beta = \int_{0.67}^{\infty} \frac{1}{2\sqrt{2}\,\sigma_g\, \Gamma \left( 1 + \frac{1}{p} \right)} \exp \left[- \left(\frac{\zeta}{\sqrt{2}\,\sigma_g}\right)^p\right]\,{\rm d}\zeta}$",
+#     fontsize=20, fontweight='bold', color='brown',
+#     verticalalignment='center', horizontalalignment='center', rotation='horizontal',
+#     bbox={'facecolor': 'lightgray', 'alpha': 0.8, 'pad': 7.5}
+# )
+
+
+# plt.text(3.5e-8, 6.2e-43, r"\textbf{``o''}$\rightarrow \sigma^2_{\rm{max}}$ \textbf{for a given mass}", fontsize=16, fontweight='bold', color='brown',
 #         verticalalignment='center', horizontalalignment='center', rotation='horizontal',
 #         bbox={'facecolor': 'gray', 'alpha': 0.12, 'pad': 4.5})
 
-plt.text(8e-9, 1.44e-83, r"$\mu < 9 \times 10^{-5}$", fontsize=18, fontweight='bold', color='brown',
-        verticalalignment='center', horizontalalignment='center', rotation='horizontal',
-        bbox={'facecolor': 'gray', 'alpha': 0.12, 'pad': 4.5})
+# plt.text(8e-9, 1.44e-83, r"\textbf{$\mu < 9 \times 10^{-5}$}", fontsize=16, fontweight='bold', color='brown',
+#         verticalalignment='center', horizontalalignment='center', rotation='horizontal',
+#         bbox={'facecolor': 'gray', 'alpha': 0.12, 'pad': 4.5})
 
-plt.text(4.63e-6, 2e-3, r"\textbf{PBH overproduction}", fontsize=19, fontweight='bold', color='olive',
+# plt.text(4.63e-6, 2e-3, r"\textbf{PBH overproduction}", fontsize=19, fontweight='bold', color='olive',
+#         verticalalignment='center', horizontalalignment='center', rotation='horizontal',
+#         bbox={'facecolor': 'salmon', 'alpha': 0.1, 'pad': 4.5})
+
+# plt.text(0.00329, 3.26e-136, r"\textbf{$M_{\rm{BH}} = 10^4\,M_{\odot} $}", fontsize=16, fontweight='bold', color='magenta',
+#         verticalalignment='center', horizontalalignment='center', rotation='vertical',
+#         bbox={'facecolor': 'gray', 'alpha': 0.1, 'pad': 4.5})
+
+# plt.text(6.22e-5, 3.26e-136, r"\textbf{$M_{\rm{BH}} = 10^5\,M_{\odot} $}", fontsize=16, fontweight='bold', color='purple',
+#         verticalalignment='center', horizontalalignment='center', rotation='vertical',
+#         bbox={'facecolor': 'gray', 'alpha': 0.1, 'pad': 4.5})
+
+# plt.text(4.53e-7, 3.26e-136, r"\textbf{$M_{\rm{BH}} = 10^7\,M_{\odot} $}", fontsize=16, fontweight='bold', color='teal',
+#         verticalalignment='center', horizontalalignment='center', rotation='vertical',
+#         bbox={'facecolor': 'gray', 'alpha': 0.1, 'pad': 4.5})
+
+
+
+# plt.legend(loc='lower right', fontsize=14, frameon=True, borderpad=0.9, labelspacing=0.8,edgecolor='brown')
+
+
+# # # # shaded legend box
+# # frame = plt.legend().get_frame()
+# # frame.set_facecolor('whitesmoke')  # fill
+# # frame.set_edgecolor('gray')        # border
+# # frame.set_alpha(0.9)
+# # frame.set_linewidth(0.8)
+# plt.axhline(y=1e-20, color='r', linestyle='--', lw=2)
+
+# # figA.tight_layout()
+# # Saving the plot
+# plt.savefig('beta_vs_variance.pdf')
+# plt.savefig('beta_vs_variance.png')
+# plt.show()
+
+
+
+
+
+
+
+# === Plot B: μ vs β at fixed masses for a single p (LaTeX-safe) ===
+p_fixed   = 1.0                  # ← change to 2.0 for the other figure
+beta_grid = np.logspace(-40, -1, 28)
+beta_mark = 1e-20
+
+fig, ax = plt.subplots()
+for i, M in enumerate(mass_list):
+    color   = plt.cm.tab10(i % 10)
+    sigmas  = [sigma_true_for_beta(b, p_fixed) for b in beta_grid]   # σ(β,p_fixed)
+    mu_vals = [mu_of_sigma2_true(s**2, M) for s in sigmas]           # μ(σ^2, M)
+
+    ax.plot(beta_grid, mu_vals, '-', color=color, lw=3,
+            label=rf"$M=10^{{{int(np.log10(M))}}}\,M_\odot $")  # legend shows only M; p goes in legend title
+
+    # dot at β = 1e-20
+    s_mark  = sigma_true_for_beta(beta_mark, p_fixed)
+    mu_mark = mu_of_sigma2_true(s_mark**2, M)
+    ax.scatter([beta_mark], [mu_mark], s=20, color=color, zorder=10)
+
+# # guides
+ax.axhline(MU_LIMIT, ls="--", c="purple")
+ax.axvline(beta_mark, ls="--", c="r")
+
+# axes/labels
+ax.set_xscale("log")
+ax.set_yscale("log")
+# ax.set_ylim(1e-6, 1e-3)
+ax.set_xlim(1e-35, 1e-7) # for p=0.6
+ax.axvspan(beta_mark, ax.get_xlim()[1], color='dimgrey', alpha=0.18, zorder=0)  # PBH overproduction region
+
+ax.set_xlabel(r"PBH mass fraction at formation $\beta$", fontsize=20)
+ax.set_ylabel(r"Spectral distortion $\mu$", fontsize=20)
+
+
+
+plt.text(
+    3.291e-28,3e-2,
+    r"${P[\zeta] = \frac{1}{2\sqrt{2}\,\sigma_g\, \Gamma \left( 1 + \frac{1}{p} \right)} \exp \left[- \left(\frac{\zeta}{\sqrt{2}\,\sigma_g}\right)^p\right]}$",
+    fontsize=18, fontweight='bold', color='brown',
+    verticalalignment='center', horizontalalignment='center', rotation='horizontal',
+    bbox={'facecolor': 'lightgray', 'alpha': 0.4, 'pad': 7.5}
+)
+
+plt.text(6.117e-33, 5e-3, r"\textbf{{where $p=1.0 $}", fontsize=16, fontweight='bold', color='brown',
+        verticalalignment='center', horizontalalignment='center', rotation='horizontal',
+        bbox={'facecolor': 'gray', 'alpha': 0.1, 'pad': 4.5})
+
+
+
+plt.text(2.31e-14, 3.e-2, r"\textbf{PBH overproduction}", fontsize=20, fontweight='bold', color='brown',
         verticalalignment='center', horizontalalignment='center', rotation='horizontal',
         bbox={'facecolor': 'salmon', 'alpha': 0.1, 'pad': 4.5})
 
-plt.text(0.00329, 3.26e-126, r"\textbf{$M_{\rm{BH}} = 10^4\,M_{\odot} $}", fontsize=16, fontweight='bold', color='magenta',
-        verticalalignment='center', horizontalalignment='center', rotation='vertical',
-        bbox={'facecolor': 'gray', 'alpha': 0.1, 'pad': 4.5})
-
-plt.text(6.22e-5, 3.26e-126, r"\textbf{$M_{\rm{BH}} = 10^5\,M_{\odot} $}", fontsize=16, fontweight='bold', color='purple',
-        verticalalignment='center', horizontalalignment='center', rotation='vertical',
-        bbox={'facecolor': 'gray', 'alpha': 0.1, 'pad': 4.5})
+plt.text(1.88e-25, 4.63e-5, r"\textbf{$\mu_{\rm max}$ (COBE/FIRAS)}", fontsize=18, fontweight='bold', color='purple',
+        verticalalignment='center', horizontalalignment='center', rotation='horizontal',
+        bbox={'facecolor': 'salmon', 'alpha': 0.1, 'pad': 4.5})
 
 
+# legend with LaTeX title (math mode)
+leg = ax.legend( ncol=2, fontsize=12,loc='upper left')
+leg.get_title().set_fontsize(12)
 
+# shaded legend box
 
-plt.legend(loc='lower right', fontsize=14, frameon=True, borderpad=0.9, labelspacing=0.8,edgecolor='brown')
+frame = leg.get_frame()
+frame.set_facecolor('whitesmoke')  # fill
+frame.set_edgecolor('gray')        # border
+frame.set_alpha(0.9)
+frame.set_linewidth(0.8)
 
+ax.grid(True, ls="--", alpha=0.5)
+fig.tight_layout()
 
-# # # shaded legend box
-# frame = plt.legend().get_frame()
-# frame.set_facecolor('whitesmoke')  # fill
-# frame.set_edgecolor('gray')        # border
-# frame.set_alpha(0.9)
-# frame.set_linewidth(0.8)
-plt.axhline(y=1e-20, color='r', linestyle='--', lw=2)
-
-# figA.tight_layout()
-# Saving the plot
-plt.savefig('beta_vs_variance.pdf')
-plt.savefig('beta_vs_variance.png')
+# save one file per p
+p_tag = str(p_fixed).replace('.', 'p')
+fig.savefig(f"mu_vs_beta_p{p_tag}.pdf", bbox_inches="tight")
+fig.savefig(f"mu_vs_beta_p{p_tag}.png", dpi=300, bbox_inches="tight")
 plt.show()
 
 
@@ -321,57 +422,6 @@ plt.show()
 
 
 
-
-# # === Plot B: μ vs β at fixed masses for a single p (LaTeX-safe) ===
-# p_fixed   = 2                  # ← change to 2.0 for the other figure
-# beta_grid = np.logspace(-40, -1, 28)
-# beta_mark = 1e-20
-
-# fig, ax = plt.subplots()
-# for i, M in enumerate(mass_list):
-#     color   = plt.cm.tab10(i % 10)
-#     sigmas  = [sigma_true_for_beta(b, p_fixed) for b in beta_grid]   # σ(β,p_fixed)
-#     mu_vals = [mu_of_sigma2_true(s**2, M) for s in sigmas]           # μ(σ^2, M)
-
-#     ax.plot(beta_grid, mu_vals, '-', color=color, lw=3,
-#             label=rf"$M=10^{{{int(np.log10(M))}}}\,M_\odot$")  # legend shows only M; p goes in legend title
-
-#     # dot at β = 1e-20
-#     s_mark  = sigma_true_for_beta(beta_mark, p_fixed)
-#     mu_mark = mu_of_sigma2_true(s_mark**2, M)
-#     ax.scatter([beta_mark], [mu_mark], s=20, color=color, zorder=10)
-
-# # # guides
-# ax.axhline(MU_LIMIT, ls=":", c="k", label=r"$|\mu|$ limit")
-# ax.axvline(beta_mark, ls="--", c="r")
-
-# # axes/labels
-# ax.set_xscale("log")
-# ax.set_yscale("log")
-# # ax.set_ylim(1e-6, 1e-3)
-# ax.set_xlim(1e-26, 1e-17)
-# ax.set_xlabel(r"PBH mass fraction at formation $\beta$", fontsize=20)
-# ax.set_ylabel(r"Spectral distortion $\mu$", fontsize=20)
-
-# # legend with LaTeX title (math mode)
-# leg = ax.legend(title=rf"$p={p_fixed:g}$", ncol=2, fontsize=14,loc='upper left',)
-# leg.get_title().set_fontsize(12)
-
-# # shaded legend box
-# frame = leg.get_frame()
-# frame.set_facecolor('whitesmoke')  # fill
-# frame.set_edgecolor('gray')        # border
-# frame.set_alpha(0.9)
-# frame.set_linewidth(0.8)
-
-# ax.grid(True, ls="--", alpha=0.5)
-# fig.tight_layout()
-
-# # save one file per p
-# p_tag = str(p_fixed).replace('.', 'p')
-# fig.savefig(f"mu_vs_beta_p{p_tag}.pdf", bbox_inches="tight")
-# fig.savefig(f"mu_vs_beta_p{p_tag}.png", dpi=300, bbox_inches="tight")
-# plt.show()
 
 
 # # === Plot C: μ vs σ̃^2 at fixed masses for p in p_values (LaTeX-safe) ===
@@ -397,7 +447,7 @@ plt.show()
 # ax.set_yscale("log")  # if you prefer linear y, comment this line out
 # # ax.set_ylim(6e-5, 1.5e-4)  # optional fixed y-range
 # ax.set_xlim(1e-7, 1e-1)
-# ax.set_xlabel(r"NCS variance parameter $\tilde{\sigma}^2$", fontsize=20)
+# ax.set_xlabel(r"Variance $\sigma^2$", fontsize=20)
 # ax.set_ylabel(r"Spectral distortion $\mu$", fontsize=20)
 # ax.legend(ncol=2, fontsize=9)
 # ax.grid(True, ls="--", alpha=0.5)
