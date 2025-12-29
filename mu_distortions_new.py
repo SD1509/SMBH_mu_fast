@@ -61,6 +61,13 @@ USE_TEX = True
 
 # Plot toggles (set True for the figures you want to generate).
 # NOTE: Keeping these False by default prevents accidental multi-plot runs.
+RUN_PLOT_MU_VS_SIGMATILDE = False
+RUN_PLOT_BETA_VS_VARIANCE = False
+RUN_PLOT_MU_VS_BETA_SINGLE_P = False
+RUN_PLOT_MU_VS_BETA_PZOO = False
+RUN_PLOT_MU_VS_FNL = False
+RUN_PLOT_BETA_AT_MU_LIMIT = False
+
 RUN_MU_VS_P_MULTI_BETA = False
 RUN_BETA_MU_LIMIT_VS_P_MULTI_M = False
 RUN_CAI_MU_VS_BETA = False
@@ -99,6 +106,60 @@ MU_LIMIT = 9e-5
 mass_list = [1e4, 1e5, 1e7]          # representative masses (M_sun)
 p_values  = [0.6]                    # tail index for toy p-PDF examples
 s2tilde_grid = np.logspace(-7, -1, 400)  # x-axis = σ̃^2 (NCS parameter)
+
+# ---- Plot parameters (edit here instead of scrolling) ----
+# Plot A: μ vs σ̃^2 (p-PDF)
+PLOT_MU_VS_SIGMATILDE_MASS_LIST = mass_list
+PLOT_MU_VS_SIGMATILDE_P_VALUES = p_values
+PLOT_MU_VS_SIGMATILDE_S2_GRID = s2tilde_grid
+PLOT_MU_VS_SIGMATILDE_XLIM = (1e-7, 1e-1)
+
+# Plot B: β vs σ^2 (p-PDF)
+PLOT_BETA_VS_VARIANCE_P_VALUES = p_values
+PLOT_BETA_VS_VARIANCE_S2_GRID = np.logspace(-10, -1, 400)
+PLOT_BETA_VS_VARIANCE_XLIM = (8e-10, 1e-1)
+PLOT_BETA_VS_VARIANCE_YLIM = (1e-320, 1e8)
+
+# Plot C: μ vs β (single p, multiple masses)
+PLOT_MU_VS_BETA_SINGLE_P = 1.0
+PLOT_MU_VS_BETA_SINGLE_P_MASSES = mass_list
+PLOT_MU_VS_BETA_SINGLE_P_BETA_GRID = np.logspace(-40, -1, 28)
+PLOT_MU_VS_BETA_SINGLE_P_XLIM = (1e-35, 1e-7)
+
+# Plot D: μ vs β ("p-zoo" at fixed mass)
+PLOT_PZOO_MASS = 1e4
+PLOT_PZOO_P_VALUES = np.arange(0.4, 2.5, 0.2)
+PLOT_PZOO_BETA_GRID = np.logspace(-32, np.log10(3e-4), 36)
+PLOT_PZOO_XLIM = (1e-32, 2.3e-4)
+PLOT_PZOO_YLIM = (1e-6, 7e-4)
+
+# Plot E: μ vs f_NL at fixed β (quadratic local NG)
+PLOT_FNL_MASS = 1e5
+PLOT_FNL_BETAS = [1e-17, 1e-14, 1e-12]
+PLOT_FNL_GRID = np.linspace(-0.8, 15.5, 41)
+
+# Plot E2: β at μ-limit vs p and f_NL (single mass)
+PLOT_BETA_AT_MU_LIMIT_MASS = 1e4
+PLOT_BETA_AT_MU_LIMIT_P_SCAN = np.linspace(1.0, 3.0, 17)
+PLOT_BETA_AT_MU_LIMIT_FNL_SCAN = np.linspace(-0.5, 2.0, 21)
+
+# Plot: μ(p) for several β at fixed mass (ζ p-PDF)
+MU_VS_P_MULTI_BETA_MASS = 1e4
+MU_VS_P_MULTI_BETA_LIST = [1e-20, 1e-15, 1e-12]
+MU_VS_P_MULTI_BETA_P_GRID = np.linspace(0.4, 2.4, 11)
+
+# Plot: β_μlim(p) for multiple masses (ζ p-PDF)
+BETA_MU_LIMIT_MASS_LIST = [1e4, 1e5, 1e7]
+BETA_MU_LIMIT_P_GRID = np.linspace(0.4, 1.4, 11)
+
+# ζ p-PDF comparison parameters (used in μ–β overlays)
+PZETA_COMPARE_P_LIST = [0.8, 1.2, 2.0]
+PZETA_COMPARE_BETA_GRID = np.logspace(-28, -6, 24)
+
+# Cai plots: shared mass and grids
+CAI_MU_VS_BETA_MASS = 1e4
+CAI_BETA_VS_SIGMA2_SG_GRID = np.logspace(-3, 0, 200)
+CAI_BETA_VS_MASS_GRID = np.logspace(4, 8, 25)
 
 # ---- Plot all 8 curves ----
 # plt.figure()
@@ -166,9 +227,9 @@ def sigma_true_for_beta(beta_target, p, zeta_c=0.67,
 # === Settings for ζ p-type vs Cai upward-step comparison ===
 # These are used both in the p-type μ–β plots and in the new Cai μ–β plots.
 
-M_cmp         = 1e4                     # comparison mass scale [M_sun]
-p_list_small  = [0.8, 1.2, 2.0]         # small set of p values for ζ p-type curves
-beta_grid     = np.logspace(-28, -6, 24)  # β grid for μ(β) plots
+M_cmp         = CAI_MU_VS_BETA_MASS          # comparison mass scale [M_sun]
+p_list_small  = PZETA_COMPARE_P_LIST         # small set of p values for ζ p-type curves
+beta_grid     = PZETA_COMPARE_BETA_GRID      # β grid for μ(β) plots
 
 def mu_from_beta_zeta(beta_val, p):
     """
@@ -403,73 +464,73 @@ def sigma2_Cl_dirac_like(kstar, amp=0.01, r_m=None, sigma_ln=0.02):
 
 ##############################
 
-# def _gauss_cdf(y, sigma):
-#     # local, so we don't change your imports
-#     from math import erf
-#     return 0.5*(1.0 + erf(y/(np.sqrt(2.0)*sigma)))
+def _gauss_cdf(y, sigma):
+    # local, so we don't change your imports
+    from math import erf
+    return 0.5*(1.0 + erf(y/(np.sqrt(2.0)*sigma)))
 
-# def beta_from_sigma_fNL(sigma_g, fNL, zeta_c=0.67):
-#     """
-#     Press–Schechter tail for quadratic local NG:
-#     ζ(y) = y + a (y^2 - σ_g^2), where y ≡ ζ_g ~ N(0,σ_g^2), a = (3/5) fNL.
-#     β = Prob[ζ ≥ ζ_c] = ∫ 1_{ζ(y)≥ζ_c} N(y;0,σ_g^2) dy
-#     Closed-form via roots of a y^2 + y - (a σ_g^2 + ζ_c) = 0.
-#     """
-#     a = 0.6 * fNL  # (3/5) fNL
-#     if abs(a) < 1e-14:
-#         # Gaussian limit
-#         from math import erfc
-#         return 0.5*erfc(zeta_c/(np.sqrt(2.0)*sigma_g))
+def beta_from_sigma_fNL(sigma_g, fNL, zeta_c=0.67):
+    """
+    Press–Schechter tail for quadratic local NG:
+    ζ(y) = y + a (y^2 - σ_g^2), where y ≡ ζ_g ~ N(0,σ_g^2), a = (3/5) fNL.
+    β = Prob[ζ ≥ ζ_c] = ∫ 1_{ζ(y)≥ζ_c} N(y;0,σ_g^2) dy
+    Closed-form via roots of a y^2 + y - (a σ_g^2 + ζ_c) = 0.
+    """
+    a = 0.6 * fNL  # (3/5) fNL
+    if abs(a) < 1e-14:
+        # Gaussian limit
+        from math import erfc
+        return 0.5*erfc(zeta_c/(np.sqrt(2.0)*sigma_g))
 
-#     # Quadratic roots where ζ(y) = ζ_c
-#     D = 1.0 + 4.0*a*(a*sigma_g**2 + zeta_c)
-#     if D < 0:
-#         # No real roots: decide by vertex value
-#         yv = -1.0/(2.0*a)
-#         zeta_v = yv + a*(yv**2 - sigma_g**2)
-#         if a > 0:
-#             return 1.0 if zeta_v >= zeta_c else 0.0
-#         else:
-#             # for a<0 and D<0, vertex < ζ_c ⇒ always below threshold
-#             return 0.0
+    # Quadratic roots where ζ(y) = ζ_c
+    D = 1.0 + 4.0*a*(a*sigma_g**2 + zeta_c)
+    if D < 0:
+        # No real roots: decide by vertex value
+        yv = -1.0/(2.0*a)
+        zeta_v = yv + a*(yv**2 - sigma_g**2)
+        if a > 0:
+            return 1.0 if zeta_v >= zeta_c else 0.0
+        else:
+            # for a<0 and D<0, vertex < ζ_c ⇒ always below threshold
+            return 0.0
 
-#     r1 = (-1.0 - np.sqrt(D)) / (2.0*a)
-#     r2 = (-1.0 + np.sqrt(D)) / (2.0*a)
-#     r1, r2 = (min(r1, r2), max(r1, r2))
+    r1 = (-1.0 - np.sqrt(D)) / (2.0*a)
+    r2 = (-1.0 + np.sqrt(D)) / (2.0*a)
+    r1, r2 = (min(r1, r2), max(r1, r2))
 
-#     if a > 0:
-#         # ζ≥ζc for y ≤ r1 or y ≥ r2  ⇒ β = 1 - [Φ(r2) - Φ(r1)]
-#         return 1.0 - (_gauss_cdf(r2, sigma_g) - _gauss_cdf(r1, sigma_g))
-#     else:
-#         # a<0: ζ≥ζc for r1 ≤ y ≤ r2  ⇒ β = Φ(r2) - Φ(r1)
-#         return _gauss_cdf(r2, sigma_g) - _gauss_cdf(r1, sigma_g)
+    if a > 0:
+        # ζ≥ζc for y ≤ r1 or y ≥ r2  ⇒ β = 1 - [Φ(r2) - Φ(r1)]
+        return 1.0 - (_gauss_cdf(r2, sigma_g) - _gauss_cdf(r1, sigma_g))
+    else:
+        # a<0: ζ≥ζc for r1 ≤ y ≤ r2  ⇒ β = Φ(r2) - Φ(r1)
+        return _gauss_cdf(r2, sigma_g) - _gauss_cdf(r1, sigma_g)
 
-# def sigma_g_for_beta_fNL(beta_target, fNL, zeta_c=0.67, s_lo=1e-8, s_hi=1.0, iters=80):
-#     """Invert β(σ_g,fNL)=β_target via bisection (β increases with σ_g)."""
-#     f = lambda s: beta_from_sigma_fNL(s, fNL, zeta_c)
-#     # expand bracket if needed
-#     for _ in range(80):
-#         if f(s_hi) < beta_target: s_hi *= 2.0
-#         else: break
-#     for _ in range(80):
-#         if f(s_lo) > beta_target: s_lo *= 0.5
-#         else: break
-#     # bisection
-#     for _ in range(iters):
-#         mid = 0.5*(s_lo + s_hi)
-#         if f(mid) >= beta_target: s_hi = mid
-#         else: s_lo = mid
-#     return 0.5*(s_lo + s_hi)
+def sigma_g_for_beta_fNL(beta_target, fNL, zeta_c=0.67, s_lo=1e-8, s_hi=1.0, iters=80):
+    """Invert β(σ_g,fNL)=β_target via bisection (β increases with σ_g)."""
+    f = lambda s: beta_from_sigma_fNL(s, fNL, zeta_c)
+    # expand bracket if needed
+    for _ in range(80):
+        if f(s_hi) < beta_target: s_hi *= 2.0
+        else: break
+    for _ in range(80):
+        if f(s_lo) > beta_target: s_lo *= 0.5
+        else: break
+    # bisection
+    for _ in range(iters):
+        mid = 0.5*(s_lo + s_hi)
+        if f(mid) >= beta_target: s_hi = mid
+        else: s_lo = mid
+    return 0.5*(s_lo + s_hi)
 
-# def mu_from_fNL_at_beta(M_sun, fNL, beta_target, zeta_c=0.67):
-#     """
-#     Given (M, fNL, β): solve σ_g, compute true variance
-#       σ^2 = σ_g^2 + (18/25) fNL^2 σ_g^4  (to O(fNL^2)),
-#     then μ = 2.2 σ^2 W(k*).
-#     """
-#     sigma_g = sigma_g_for_beta_fNL(beta_target, fNL, zeta_c=zeta_c)
-#     sigma2_true = sigma_g**2 + (18.0/25.0)*(fNL**2)*(sigma_g**4)
-#     return mu_of_sigma2_true(sigma2_true, M_sun)
+def mu_from_fNL_at_beta(M_sun, fNL, beta_target, zeta_c=0.67):
+    """
+    Given (M, fNL, β): solve σ_g, compute true variance
+      σ^2 = σ_g^2 + (18/25) fNL^2 σ_g^4  (to O(fNL^2)),
+    then μ = 2.2 σ^2 W(k*).
+    """
+    sigma_g = sigma_g_for_beta_fNL(beta_target, fNL, zeta_c=zeta_c)
+    sigma2_true = sigma_g**2 + (18.0/25.0)*(fNL**2)*(sigma_g**4)
+    return mu_of_sigma2_true(sigma2_true, M_sun)
 
 
 
@@ -480,456 +541,323 @@ def sigma2_Cl_dirac_like(kstar, amp=0.01, r_m=None, sigma_ln=0.02):
 
 ############################################################################################################
 
-# # === Plot A: μ vs σ̃^2 at fixed masses for p in p_values (LaTeX-safe) ===
-# s2tilde_grid = np.logspace(-7, -1, 400)   # x-axis = NCS variance parameter
+if RUN_PLOT_MU_VS_SIGMATILDE:
+    # === Plot A: μ vs σ̃^2 at fixed masses for p in p_values (LaTeX-safe) ===
+    fig, ax = plt.subplots()
+    for i, M in enumerate(PLOT_MU_VS_SIGMATILDE_MASS_LIST):
+        color = plt.cm.tab10(i % 10)
+        for p in PLOT_MU_VS_SIGMATILDE_P_VALUES:
+            # σ_true^2 = C(p) * σ̃^2  ⇒  μ(σ̃^2; M, p)
+            s2_true = C_of_p(p) * PLOT_MU_VS_SIGMATILDE_S2_GRID
+            mu_line = mu_of_sigma2_true(s2_true, M)
 
-# fig, ax = plt.subplots()
-# for i, M in enumerate(mass_list):
-#     color = plt.cm.tab10(i % 10)
-#     for p in p_values:
-#         # σ_true^2 = C(p) * σ̃^2  ⇒  μ(σ̃^2; M, p)
-#         s2_true = C_of_p(p) * s2tilde_grid
-#         mu_line = mu_of_sigma2_true(s2_true, M)
+            style = '-' if abs(p - 2.0) < 1e-12 else '--'  # solid for p=2, dashed otherwise
+            ax.plot(PLOT_MU_VS_SIGMATILDE_S2_GRID, mu_line, style, color=color, lw=2,
+                    label=rf"$M={M:.0e}\,M_\odot,\ p={p:g}$")
 
-#         style = '-' if abs(p - 2.0) < 1e-12 else '--'  # solid for p=2, dashed otherwise
-#         ax.plot(s2tilde_grid, mu_line, style, color=color, lw=2,
-#                 label=rf"$M={M:.0e}\,M_\odot,\ p={p:g}$")
+    # guides
+    ax.axhline(MU_LIMIT, ls=":", c="k", label=r"$|\mu|$ limit")
 
-# # guides
-# ax.axhline(MU_LIMIT, ls=":", c="k", label=r"$|\mu|$ limit")
+    # axes/labels
+    ax.set_xscale("log")
+    ax.set_yscale("log")  # if you prefer linear y, comment this line out
+    # ax.set_ylim(6e-5, 1.5e-4)  # optional fixed y-range
+    ax.set_xlim(*PLOT_MU_VS_SIGMATILDE_XLIM)
+    ax.set_xlabel(r"Variance $\sigma^2$", fontsize=20)
+    ax.set_ylabel(r"Spectral distortion $\mu$", fontsize=20)
+    ax.legend(ncol=2, fontsize=9)
+    ax.grid(True, ls="--", alpha=0.5)
+    fig.tight_layout()
 
-# # axes/labels
-# ax.set_xscale("log")
-# ax.set_yscale("log")  # if you prefer linear y, comment this line out
-# # ax.set_ylim(6e-5, 1.5e-4)  # optional fixed y-range
-# ax.set_xlim(1e-7, 1e-1)
-# ax.set_xlabel(r"Variance $\sigma^2$", fontsize=20)
-# ax.set_ylabel(r"Spectral distortion $\mu$", fontsize=20)
-# ax.legend(ncol=2, fontsize=9)
-# ax.grid(True, ls="--", alpha=0.5)
-# fig.tight_layout()
+    # Saving the plot
+    fig.savefig("mu_vs_sigmatilde2.pdf", bbox_inches="tight")
+    fig.savefig("mu_vs_sigmatilde2.png", dpi=300, bbox_inches="tight")
 
-# # Saving the plot
-# fig.savefig("mu_vs_sigmatilde2.pdf", bbox_inches="tight")
-# fig.savefig("mu_vs_sigmatilde2.png", dpi=300, bbox_inches="tight")
-
-# plt.show()
+    plt.show()
 
 
 
 
 
 #####################################################################################################################
+#####################################################################################################################
 
+if RUN_PLOT_BETA_VS_VARIANCE:
+    # === Plot B: β vs true variance σ^2 for your p_values ===
+    figA, axA = plt.subplots(figsize=(10, 7))
 
-# # === Plot B: β vs true variance σ^2 for your p_values ===
+    for p in PLOT_BETA_VS_VARIANCE_P_VALUES:
+        beta_vals = [beta_from_sigma_true(np.sqrt(s2), p) for s2 in PLOT_BETA_VS_VARIANCE_S2_GRID]
+        axA.plot(PLOT_BETA_VS_VARIANCE_S2_GRID, beta_vals, lw=2.5, label=rf"$p={p:g}$")
 
+    # get bottom of current axis (data coordinates)
+    ymin, ymax = axA.get_ylim()
 
-# s2_true_grid = np.logspace(-10, -1, 400)
+    # draw vertical line from bottom to target y
+    axA.plot([1.84e-3, 1.83e-3], [ymin, 2.4e-55], color='dimgrey', linestyle=':', lw=2)
+    axA.plot([4.616e-4, 4.616e-4], [ymin, 7.42e-22], color='dimgrey', linestyle=':', lw=2)
+    axA.plot([3.41e-5, 3.41e-5], [ymin, 1e-72], color='dimgrey', linestyle=':', lw=2)
+    axA.plot([8.678e-7, 8.678e-7], [ymin, 1e-60], color='dimgrey', linestyle=':', lw=2)
+    axA.plot([1.1536e-5, 1.1536e-5], [ymin, 3.4e-122], color='dimgrey', linestyle=':', lw=2)
+    axA.plot([2.566e-6, 2.566e-6], [ymin, 3.4e-43], color='dimgrey', linestyle=':', lw=2)
 
+    axA.plot(1.84e-3, 2.4e-55, marker='o', markersize=10,
+             markerfacecolor='magenta', markeredgecolor='dimgrey', markeredgewidth=1.2, zorder=10)
+    axA.plot(4.616e-4, 7.42e-22, marker='o', markersize=10,
+             markerfacecolor='magenta', markeredgecolor='dimgrey', markeredgewidth=1.2, zorder=10)
+    axA.plot(3.4e-5, 1e-72, marker='o', markersize=10,
+             markerfacecolor='purple', markeredgecolor='dimgrey', markeredgewidth=1.2, zorder=10)
+    axA.plot(2.566e-6, 3.4e-43, marker='o', markersize=10,
+             markerfacecolor='purple', markeredgecolor='dimgrey', markeredgewidth=1.2, zorder=10)
+    axA.plot(1.1536e-5, 3.4e-122, marker='o', markersize=10,
+             markerfacecolor='teal', markeredgecolor='dimgrey', markeredgewidth=1.2, zorder=10)
+    axA.plot(2.566e-6, 3.4e-43, marker='o', markersize=10,
+             markerfacecolor='purple', markeredgecolor='dimgrey', markeredgewidth=1.2, zorder=10)
+    axA.plot(8.67e-7, 7.9e-60, marker='o', markersize=10,
+             markerfacecolor='teal', markeredgecolor='dimgrey', markeredgewidth=1.2, zorder=10)
 
+    axA.set_ylim(*PLOT_BETA_VS_VARIANCE_YLIM)
+    axA.set_yscale("log")
+    axA.set_xscale("log"); axA.set_yscale("log")
+    axA.set_xlabel(r"Variance  $\sigma^2$ ", fontsize=20)
+    axA.set_ylabel(r"PBH mass fraction at formation  $\beta$", fontsize=20)
+    # axA.set_title(r"$\beta$ vs $\sigma^2$  (NCS $p$-PDF, $\zeta_c=0.67$)")
+    axA.set_xlim(*PLOT_BETA_VS_VARIANCE_XLIM)
 
-# # === Active version using fig/ax and LaTeX-bold strings ===
-# figA, axA = plt.subplots(figsize=(10,7))
+    axA.grid(True, ls="--", alpha=0.7)
 
-# # for p in p_values:
-# #     beta_vals = [beta_from_sigma_true(np.sqrt(s2), p) for s2 in s2_true_grid]
-# #     axA.plot(s2_true_grid, beta_vals, lw=2.5, label=rf"$p={p:g}$")
+    # Annotations for Plot B
+    plt.text(
+        1.2e-6, 1.44e-289,
+        r"$\boldsymbol{\beta = \int_{0.67}^{\infty} \frac{1}{2\sqrt{2}\,\sigma_g\, \Gamma \left( 1 + \frac{1}{p} \right)} \exp \left[- \left(\frac{\zeta}{\sqrt{2}\,\sigma_g}\right)^p\right] \,{\rm d}\zeta}$",
+        fontsize=20, fontweight='bold', color='brown',
+        verticalalignment='center', horizontalalignment='center', rotation='horizontal',
+        bbox={'facecolor': 'lightgray', 'alpha': 0.8, 'pad': 7.5}
+    )
 
+    plt.text(3.5e-8, 6.2e-43, r"\textbf{``o''}$\rightarrow \sigma^2_{\rm{max}}$ \textbf{for a given mass}", fontsize=16, fontweight='bold', color='brown',
+            verticalalignment='center', horizontalalignment='center', rotation='horizontal',
+            bbox={'facecolor': 'gray', 'alpha': 0.12, 'pad': 4.5})
 
-# # axA.text(7e-7, 1.44e-259,
-# #          r"$\beta = \int_{0.67}^{\infty} \frac{1}{2\sqrt{2}\,\sigma_g\, \Gamma \left( 1 + \frac{1}{p} \right)} \exp \left[- \left(\frac{\zeta}{\sqrt{2}\,\sigma_g}\right)^p\right]\,{\rm d}\zeta$",
-# #          fontsize=18, fontweight='bold', color='brown',
-# #          va='center', ha='center', rotation='horizontal',
-# #          bbox={'facecolor': 'gray', 'alpha': 0.12, 'pad': 4.5},
-# #          zorder=100, clip_on=False)
+    plt.text(8e-9, 1.44e-83, r"\textbf{$\mu < 9 \times 10^{-5}$}", fontsize=16, fontweight='bold', color='brown',
+            verticalalignment='center', horizontalalignment='center', rotation='horizontal',
+            bbox={'facecolor': 'gray', 'alpha': 0.12, 'pad': 4.5})
 
+    plt.text(4.63e-6, 2e-3, r"\textbf{PBH overproduction}", fontsize=19, fontweight='bold', color='olive',
+            verticalalignment='center', horizontalalignment='center', rotation='horizontal',
+            bbox={'facecolor': 'salmon', 'alpha': 0.1, 'pad': 4.5})
 
+    plt.text(0.00329, 3.26e-136, r"\textbf{$M_{\rm{BH}} = 10^4\,M_{\odot} $}", fontsize=16, fontweight='bold', color='magenta',
+            verticalalignment='center', horizontalalignment='center', rotation='vertical',
+            bbox={'facecolor': 'gray', 'alpha': 0.1, 'pad': 4.5})
 
-# for p in p_values:
-#     beta_vals = [beta_from_sigma_true(np.sqrt(s2), p) for s2 in s2_true_grid]
-#     axA.plot(s2_true_grid, beta_vals, lw=2.5, label=rf"$p={p:g}$")
+    plt.text(6.22e-5, 3.26e-136, r"\textbf{$M_{\rm{BH}} = 10^5\,M_{\odot} $}", fontsize=16, fontweight='bold', color='purple',
+            verticalalignment='center', horizontalalignment='center', rotation='vertical',
+            bbox={'facecolor': 'gray', 'alpha': 0.1, 'pad': 4.5})
 
+    plt.text(4.53e-7, 3.26e-136, r"\textbf{$M_{\rm{BH}} = 10^7\,M_{\odot} $}", fontsize=16, fontweight='bold', color='teal',
+            verticalalignment='center', horizontalalignment='center', rotation='vertical',
+            bbox={'facecolor': 'gray', 'alpha': 0.1, 'pad': 4.5})
 
-# # plt.axvline(x=1.364e-4, color='gray', linestyle='--', lw=2)
-# # plt.axvline(x=3.41e-5, color='gray', linestyle='--', lw=2)
-# xv = 1.84e-3
-# y_target = 2.4e-55
+    plt.legend(loc='lower right', fontsize=14, frameon=True, borderpad=0.9, labelspacing=0.8, edgecolor='brown')
+    plt.axhline(y=1e-20, color='r', linestyle='--', lw=2)
 
-# # get bottom of current axis (data coordinates)
-# ymin, ymax = axA.get_ylim()
-    
-# # ensure the target is within the axis range (optional)
-# # if needed, set limits: ax.set_ylim(min(ymin, y_target*0.9), ymax)
-
-# # draw vertical line from bottom to target y
-# axA.plot([1.84e-3, 1.83e-3], [ymin, 2.4e-55], color='dimgrey', linestyle=':', lw=2)
-# axA.plot([4.616e-4, 4.616e-4], [ymin, 7.42e-22], color='dimgrey', linestyle=':', lw=2)
-# # axA.plot([1.364e-4, 1.364e-4], [ymin, 7.42e-22], color='dimgrey', linestyle=':', lw=2)
-# axA.plot([3.41e-5, 3.41e-5], [ymin, 1e-72], color='dimgrey', linestyle=':', lw=2)
-# axA.plot([8.678e-7, 8.678e-7], [ymin, 1e-60], color='dimgrey', linestyle=':', lw=2)
-# # plt.axvline(x=1.1536e-5, color='gray', linestyle='--', lw=2)
-# axA.plot([1.1536e-5, 1.1536e-5], [ymin, 3.4e-122], color='dimgrey', linestyle=':', lw=2)
-# axA.plot([2.566e-6, 2.566e-6], [ymin, 3.4e-43], color='dimgrey', linestyle=':', lw=2)
-
-
-# axA.plot(1.84e-3, 2.4e-55, marker='o', markersize=10,
-#          markerfacecolor='magenta', markeredgecolor='dimgrey', markeredgewidth=1.2, zorder=10)
-# axA.plot(4.616e-4, 7.42e-22, marker='o', markersize=10,
-#          markerfacecolor='magenta', markeredgecolor='dimgrey', markeredgewidth=1.2, zorder=10)
-# axA.plot(3.4e-5, 1e-72, marker='o', markersize=10,
-#          markerfacecolor='purple', markeredgecolor='dimgrey', markeredgewidth=1.2, zorder=10)
-# axA.plot(2.566e-6, 3.4e-43, marker='o', markersize=10,
-#          markerfacecolor='purple', markeredgecolor='dimgrey', markeredgewidth=1.2, zorder=10)
-# axA.plot(1.1536e-5, 3.4e-122, marker='o', markersize=10,
-#          markerfacecolor='teal', markeredgecolor='dimgrey', markeredgewidth=1.2, zorder=10)
-# axA.plot(2.566e-6, 3.4e-43, marker='o', markersize=10,
-#          markerfacecolor='purple', markeredgecolor='dimgrey', markeredgewidth=1.2, zorder=10)
-# axA.plot(8.67e-7, 7.9e-60, marker='o', markersize=10,
-#          markerfacecolor='teal', markeredgecolor='dimgrey', markeredgewidth=1.2, zorder=10)
-
-
-# axA.set_ylim(1e-320, 1e8)
-# axA.set_yscale("log")
-# axA.set_xscale("log"); axA.set_yscale("log")
-# axA.set_xlabel(r"Variance  $\sigma^2$ ", fontsize=20)
-# axA.set_ylabel(r"PBH mass fraction at formation  $\beta$", fontsize=20)
-# # axA.set_title(r"$\beta$ vs $\sigma^2$  (NCS $p$-PDF, $\zeta_c=0.67$)")
-# axA.set_xlim(8e-10, 1e-1)
-
-
-
-
-
-
-
-
-# # axA.legend(loc='lower left', fontsize=15, frameon=False, handlelength=1.5,
-# #         handletextpad=0.5, borderpad=0.5, labelspacing=0.5, facecolor='brown', edgecolor='brown',alpha=0.1)
-# axA.grid(True, ls="--", alpha=0.7)
-
-
-# #Annotations for Plot B
-
-# # plt.text(7e-7, 1.44e-259, r"$\beta = \int_{0.67}^{\infty} \frac{1}{2\sqrt{2}\,\sigma_g\, \Gamma \left( 1 + \frac{1}{p} \right)} \exp \left[- \left(\frac{\zeta}{\sqrt{2}\,\sigma_g}\right)^p\right]\,{\rm d}\zeta$", fontsize=18, fontweight='bold', color='brown',
-# #         verticalalignment='center', horizontalalignment='center', rotation='horizontal',
-# #         bbox={'facecolor': 'gray', 'alpha': 0.12, 'pad': 4.5})
-
-
-
-# plt.text(
-#     1.2e-6, 1.44e-289,
-#     r"$\boldsymbol{\beta = \int_{0.67}^{\infty} \frac{1}{2\sqrt{2}\,\sigma_g\, \Gamma \left( 1 + \frac{1}{p} \right)} \exp \left[- \left(\frac{\zeta}{\sqrt{2}\,\sigma_g}\right)^p\right]\,{\rm d}\zeta}$",
-#     fontsize=20, fontweight='bold', color='brown',
-#     verticalalignment='center', horizontalalignment='center', rotation='horizontal',
-#     bbox={'facecolor': 'lightgray', 'alpha': 0.8, 'pad': 7.5}
-# )
-
-
-# plt.text(3.5e-8, 6.2e-43, r"\textbf{``o''}$\rightarrow \sigma^2_{\rm{max}}$ \textbf{for a given mass}", fontsize=16, fontweight='bold', color='brown',
-#         verticalalignment='center', horizontalalignment='center', rotation='horizontal',
-#         bbox={'facecolor': 'gray', 'alpha': 0.12, 'pad': 4.5})
-
-# plt.text(8e-9, 1.44e-83, r"\textbf{$\mu < 9 \times 10^{-5}$}", fontsize=16, fontweight='bold', color='brown',
-#         verticalalignment='center', horizontalalignment='center', rotation='horizontal',
-#         bbox={'facecolor': 'gray', 'alpha': 0.12, 'pad': 4.5})
-
-# plt.text(4.63e-6, 2e-3, r"\textbf{PBH overproduction}", fontsize=19, fontweight='bold', color='olive',
-#         verticalalignment='center', horizontalalignment='center', rotation='horizontal',
-#         bbox={'facecolor': 'salmon', 'alpha': 0.1, 'pad': 4.5})
-
-# plt.text(0.00329, 3.26e-136, r"\textbf{$M_{\rm{BH}} = 10^4\,M_{\odot} $}", fontsize=16, fontweight='bold', color='magenta',
-#         verticalalignment='center', horizontalalignment='center', rotation='vertical',
-#         bbox={'facecolor': 'gray', 'alpha': 0.1, 'pad': 4.5})
-
-# plt.text(6.22e-5, 3.26e-136, r"\textbf{$M_{\rm{BH}} = 10^5\,M_{\odot} $}", fontsize=16, fontweight='bold', color='purple',
-#         verticalalignment='center', horizontalalignment='center', rotation='vertical',
-#         bbox={'facecolor': 'gray', 'alpha': 0.1, 'pad': 4.5})
-
-# plt.text(4.53e-7, 3.26e-136, r"\textbf{$M_{\rm{BH}} = 10^7\,M_{\odot} $}", fontsize=16, fontweight='bold', color='teal',
-#         verticalalignment='center', horizontalalignment='center', rotation='vertical',
-#         bbox={'facecolor': 'gray', 'alpha': 0.1, 'pad': 4.5})
-
-
-
-# plt.legend(loc='lower right', fontsize=14, frameon=True, borderpad=0.9, labelspacing=0.8,edgecolor='brown')
-
-
-# # # # shaded legend box
-# # frame = plt.legend().get_frame()
-# # frame.set_facecolor('whitesmoke')  # fill
-# # frame.set_edgecolor('gray')        # border
-# # frame.set_alpha(0.9)
-# # frame.set_linewidth(0.8)
-# plt.axhline(y=1e-20, color='r', linestyle='--', lw=2)
-
-# # figA.tight_layout()
-# # Saving the plot
-# plt.savefig('beta_vs_variance.pdf')
-# plt.savefig('beta_vs_variance.png')
-# plt.show()
-
-
-
-
-
+    plt.savefig('beta_vs_variance.pdf')
+    plt.savefig('beta_vs_variance.png')
+    plt.show()
 ############################################################################################################
 
+if RUN_PLOT_MU_VS_BETA_SINGLE_P:
+    # === Plot C: μ vs β at fixed masses for a single p ===
+    p_fixed   = PLOT_MU_VS_BETA_SINGLE_P
+    beta_grid = PLOT_MU_VS_BETA_SINGLE_P_BETA_GRID
+    beta_mark = 1e-20
 
+    fig, ax = plt.subplots()
+    for i, M in enumerate(PLOT_MU_VS_BETA_SINGLE_P_MASSES):
+        color   = plt.cm.tab10(i % 10)
+        sigmas  = [sigma_true_for_beta(b, p_fixed) for b in beta_grid]   # σ(β,p_fixed)
+        mu_vals = [mu_of_sigma2_true(s**2, M) for s in sigmas]           # μ(σ^2, M)
 
-# # === Plot C: μ vs β at fixed masses for a single p ===
+        ax.plot(beta_grid, mu_vals, '-', color=color, lw=3,
+                label=rf"$M=10^{{{int(np.log10(M))}}}\,M_\odot $")  # legend shows only M; p goes in legend title
 
+    # guides
+    ax.axhline(MU_LIMIT, ls="--", c="purple")
 
-# p_fixed   = 1.0                  # ← change to 2.0 for the other figure
-# beta_grid = np.logspace(-40, -1, 28)
-# beta_mark = 1e-20
+    # axes/labels
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlim(*PLOT_MU_VS_BETA_SINGLE_P_XLIM)  # for p=0.6
 
-# fig, ax = plt.subplots()
-# for i, M in enumerate(mass_list):
-#     color   = plt.cm.tab10(i % 10)
-#     sigmas  = [sigma_true_for_beta(b, p_fixed) for b in beta_grid]   # σ(β,p_fixed)
-#     mu_vals = [mu_of_sigma2_true(s**2, M) for s in sigmas]           # μ(σ^2, M)
+    ax.set_xlabel(r"PBH mass fraction at formation $\beta$", fontsize=20)
+    ax.set_ylabel(r"Spectral distortion $\mu$", fontsize=20)
 
-#     ax.plot(beta_grid, mu_vals, '-', color=color, lw=3,
-#             label=rf"$M=10^{{{int(np.log10(M))}}}\,M_\odot $")  # legend shows only M; p goes in legend title
+    plt.text(
+        3.291e-28, 3e-2,
+        r"${P[\zeta] = \frac{1}{2\sqrt{2}\,\sigma_g\, \Gamma \left( 1 + \frac{1}{p} \right)} \exp \left[- \left(\frac{\zeta}{\sqrt{2}\,\sigma_g}\right)^p\right]}$",
+        fontsize=18, fontweight='bold', color='brown',
+        verticalalignment='center', horizontalalignment='center', rotation='horizontal',
+        bbox={'facecolor': 'lightgray', 'alpha': 0.4, 'pad': 7.5}
+    )
 
-#     # dot at β = 1e-20
-#     # s_mark  = sigma_true_for_beta(beta_mark, p_fixed)
-#     # mu_mark = mu_of_sigma2_true(s_mark**2, M)
-#     # ax.scatter([beta_mark], [mu_mark], s=20, color=color, zorder=10)
+    plt.text(6.117e-33, 5e-3, rf"\textbf{{where $p={p_fixed:.1f}$}}", fontsize=16, fontweight='bold', color='brown',
+            verticalalignment='center', horizontalalignment='center', rotation='horizontal',
+            bbox={'facecolor': 'gray', 'alpha': 0.1, 'pad': 4.5})
 
-# # # guides
-# ax.axhline(MU_LIMIT, ls="--", c="purple")
-# # ax.axvline(beta_mark, ls="--", c="r")
+    plt.text(1.88e-25, 4.63e-5, r"\textbf{$\mu_{\rm max}$ (COBE/FIRAS)}", fontsize=18, fontweight='bold', color='purple',
+            verticalalignment='center', horizontalalignment='center', rotation='horizontal',
+            bbox={'facecolor': 'salmon', 'alpha': 0.1, 'pad': 4.5})
 
-# # axes/labels
-# ax.set_xscale("log")
-# ax.set_yscale("log")
-# # ax.set_ylim(1e-6, 1e-3)
-# ax.set_xlim(1e-35, 1e-7) # for p=0.6
-# # ax.axvspan(beta_mark, ax.get_xlim()[1], color='dimgrey', alpha=0.18, zorder=0)  # PBH overproduction region
+    leg = ax.legend(ncol=2, fontsize=12, loc='upper left')
+    leg.get_title().set_fontsize(12)
 
-# ax.set_xlabel(r"PBH mass fraction at formation $\beta$", fontsize=20)
-# ax.set_ylabel(r"Spectral distortion $\mu$", fontsize=20)
+    frame = leg.get_frame()
+    frame.set_facecolor('whitesmoke')
+    frame.set_edgecolor('gray')
+    frame.set_alpha(0.9)
+    frame.set_linewidth(0.8)
 
+    ax.grid(True, ls="--", alpha=0.5)
+    fig.tight_layout()
 
-
-# plt.text(
-#     3.291e-28,3e-2,
-#     r"${P[\zeta] = \frac{1}{2\sqrt{2}\,\sigma_g\, \Gamma \left( 1 + \frac{1}{p} \right)} \exp \left[- \left(\frac{\zeta}{\sqrt{2}\,\sigma_g}\right)^p\right]}$",
-#     fontsize=18, fontweight='bold', color='brown',
-#     verticalalignment='center', horizontalalignment='center', rotation='horizontal',
-#     bbox={'facecolor': 'lightgray', 'alpha': 0.4, 'pad': 7.5}
-# )
-
-# plt.text(6.117e-33, 5e-3, r"\textbf{{where $p=1.0 $}", fontsize=16, fontweight='bold', color='brown',
-#         verticalalignment='center', horizontalalignment='center', rotation='horizontal',
-#         bbox={'facecolor': 'gray', 'alpha': 0.1, 'pad': 4.5})
-
-
-
-# # plt.text(2.31e-14, 3.e-2, r"\textbf{PBH overproduction}", fontsize=20, fontweight='bold', color='brown',
-# #         verticalalignment='center', horizontalalignment='center', rotation='horizontal',
-# #         bbox={'facecolor': 'salmon', 'alpha': 0.1, 'pad': 4.5})
-
-# plt.text(1.88e-25, 4.63e-5, r"\textbf{$\mu_{\rm max}$ (COBE/FIRAS)}", fontsize=18, fontweight='bold', color='purple',
-#         verticalalignment='center', horizontalalignment='center', rotation='horizontal',
-#         bbox={'facecolor': 'salmon', 'alpha': 0.1, 'pad': 4.5})
-
-
-# # legend with LaTeX title (math mode)
-# leg = ax.legend( ncol=2, fontsize=12,loc='upper left')
-# leg.get_title().set_fontsize(12)
-
-# # shaded legend box
-
-# frame = leg.get_frame()
-# frame.set_facecolor('whitesmoke')  # fill
-# frame.set_edgecolor('gray')        # border
-# frame.set_alpha(0.9)
-# frame.set_linewidth(0.8)
-
-# ax.grid(True, ls="--", alpha=0.5)
-# fig.tight_layout()
-
-# # save one file per p
-# p_tag = str(p_fixed).replace('.', 'p')
-# fig.savefig(f"mu_vs_beta_p{p_tag}.pdf", bbox_inches="tight")
-# fig.savefig(f"mu_vs_beta_p{p_tag}.png", dpi=300, bbox_inches="tight")
-# plt.show()
-
-
-
-
-
-
-
+    # save one file per p
+    p_tag = str(p_fixed).replace('.', 'p')
+    fig.savefig(f"mu_vs_beta_p{p_tag}.pdf", bbox_inches="tight")
+    fig.savefig(f"mu_vs_beta_p{p_tag}.png", dpi=300, bbox_inches="tight")
+    plt.show()
 ############################################################################################################
 
+if RUN_PLOT_MU_VS_BETA_PZOO:
+    # === Plot D (single-mass "p-zoo"): μ vs β at one mass for many close p values ===
+    M_single = PLOT_PZOO_MASS
+    p_values_zoo = PLOT_PZOO_P_VALUES
+    beta_grid = PLOT_PZOO_BETA_GRID
 
+    fig, ax = plt.subplots()
 
+    # color by p with a colorbar (keeps legend uncluttered)
+    cmap = plt.cm.viridis
+    norm = plt.Normalize(vmin=p_values_zoo.min(), vmax=p_values_zoo.max())
 
+    for p in p_values_zoo:
+        mu_vals = [mu_of_sigma2_true(sigma_true_for_beta(b, p)**2, M_single) for b in beta_grid]
+        ax.plot(beta_grid, mu_vals, color=cmap(norm(p)), lw=2.5)
 
+    # guides and styling
+    ax.axhline(MU_LIMIT, ls="--", c="red", lw=2.5)
+    ax.set_xscale("log"); ax.set_yscale("log")
+    ax.set_ylim(*PLOT_PZOO_YLIM); ax.set_xlim(*PLOT_PZOO_XLIM)
+    ax.set_xlabel(r"PBH mass fraction at formation $\beta$", fontsize=20)
+    ax.set_ylabel(r"Spectral distortion $\mu$", fontsize=20)
+    ax.grid(True, ls="--", alpha=0.5)
 
-# === Plot D (single-mass "p-zoo"): μ vs β at one mass for many close p values ===
+    # colorbar
+    sm = plt.cm.ScalarMappable(norm=norm, cmap=cmap); sm.set_array([])
+    cbar = fig.colorbar(sm, ax=ax, pad=0.015)
+    cbar.set_ticks(np.round(np.linspace(p_values_zoo.min(), p_values_zoo.max(), 6), 1))
 
+    # concise title with mass & p-range
+    ax.set_title(
+        rf"$M=10^{{{int(np.log10(M_single))}}}\,M_\odot$; "
+        rf"$p\in[{p_values_zoo.min():.1f},{p_values_zoo.max():.1f}]$",
+        fontsize=16
+    )
 
-# M_single = 1e4                            # pick a seed mass (e.g., 1e4 Msun)
-# p_values_zoo = np.arange(0.4, 2.5, 0.2)   # dense around p=2; tweak as you like
-# beta_grid = np.logspace(-32, np.log10(3e-4), 36)      # β range; widen/narrow as needed
+    plt.text(9.8e-8, 2.48e-6, r"\textbf{$\mu_{\rm max}$}", fontsize=18, fontweight='bold', color='red',
+            verticalalignment='center', horizontalalignment='center', rotation='horizontal',
+            bbox={'facecolor': 'salmon', 'alpha': 0.1, 'pad': 4.5})
 
+    plt.text(2.3e-8, 1.637e-6, r"\textbf{(COBE/FIRAS)}", fontsize=16, fontweight='bold', color='red',
+            verticalalignment='center', horizontalalignment='center', rotation='horizontal',
+            bbox={'facecolor': 'salmon', 'alpha': 0.1, 'pad': 4.5})
 
-# fig, ax = plt.subplots()
-
-# # color by p with a colorbar (keeps legend uncluttered)
-# cmap = plt.cm.viridis
-# norm = plt.Normalize(vmin=p_values_zoo.min(), vmax=p_values_zoo.max())
-
-# for p in p_values_zoo:
-#     mu_vals = [mu_of_sigma2_true(sigma_true_for_beta(b, p)**2, M_single) for b in beta_grid]
-#     ax.plot(beta_grid, mu_vals, color=cmap(norm(p)), lw=2.5)
-
- 
-
-# # guides and styling
-# ax.axhline(MU_LIMIT, ls="--", c="red", lw=2.5)
-# ax.set_xscale("log"); ax.set_yscale("log")
-# ax.set_ylim(1e-6, 7e-4); ax.set_xlim(1e-32, 2.3e-4)
-# ax.set_xlabel(r"PBH mass fraction at formation $\beta$", fontsize=20)
-# ax.set_ylabel(r"Spectral distortion $\mu$", fontsize=20)
-# ax.grid(True, ls="--", alpha=0.5)
-
-# # colorbar
-# sm = plt.cm.ScalarMappable(norm=norm, cmap=cmap); sm.set_array([])
-# cbar = fig.colorbar(sm, ax=ax, pad=0.015)
-# # cbar.set_label(r"$p$", rotation=0, labelpad=8)
-# cbar.set_ticks(np.round(np.linspace(p_values_zoo.min(), p_values_zoo.max(), 6), 1))
-
-# # concise title with mass & p-range
-# ax.set_title(
-#     rf"$M=10^{{{int(np.log10(M_single))}}}\,M_\odot$; "
-#     rf"$p\in[{p_values_zoo.min():.1f},{p_values_zoo.max():.1f}]$",
-#     fontsize=16
-# )
-# # optional tiny note on step size
-# # ax.text(0.02, 0.03, rf"$\Delta p={p_values_zoo[1]-p_values_zoo[0]:.1f}$",
-# #         transform=ax.transAxes, fontsize=10)
-
-# plt.text(9.8e-8, 2.48e-6, r"\textbf{$\mu_{\rm max}$}", fontsize=18, fontweight='bold', color='red',
-#         verticalalignment='center', horizontalalignment='center', rotation='horizontal',
-#         bbox={'facecolor': 'salmon', 'alpha': 0.1, 'pad': 4.5})
-
-# plt.text(2.3e-8, 1.637e-6, r"\textbf{(COBE/FIRAS)}", fontsize=16, fontweight='bold', color='red',
-#         verticalalignment='center', horizontalalignment='center', rotation='horizontal',
-#         bbox={'facecolor': 'salmon', 'alpha': 0.1, 'pad': 4.5})
-
-
-
-
-# fig.tight_layout()
-# fig.savefig(f"mu_vs_beta_pzoo_M{int(M_single):d}.pdf", bbox_inches="tight")
-# fig.savefig(f"mu_vs_beta_pzoo_M{int(M_single):d}.png", dpi=300, bbox_inches="tight")
-# plt.show()
-
-
-
-
-
-
-
-
-
-# ############################################################################################################
-
-# # === Plot E: μ vs f_NL at fixed β for one mass (quadratic local NG only) ===
-
-
-# # ζ = ζ_g + (3/5) f_NL (ζ_g^2 - ⟨ζ_g^2⟩), keep up to O(f_NL^2) in variance.
-
-
-# M_fnl    = 1e5                       # choose the seed mass
-# betas    = [1e-17, 1e-14, 1e-12]     # pick 1+ β levels to show
-# fNL_grid = np.linspace(-0.8, 15.5, 41)
-# # ----------------------------------
-
-# fig, ax = plt.subplots()
-# for j, beta_target in enumerate(betas):
-#     mu_vals = [mu_from_fNL_at_beta(M_fnl, f, beta_target) for f in fNL_grid]
-#     ax.plot(fNL_grid, mu_vals, lw=2.5, label=rf"$\beta={beta_target:.0e}$")
-
-# # guides and labels in your style
-# ax.axhline(MU_LIMIT, ls="--", c="red", label=r"$\mu_{\rm max}$ (COBE/FIRAS)",lw=2.5)
-# ax.set_xlabel(r"$f_{\mathrm{NL}}$", fontsize=20)
-# ax.set_ylabel(r"Spectral distortion $\mu$", fontsize=20)
-# ax.set_title(rf"$M=10^{{{int(np.log10(M_fnl))}}}\,M_\odot$", fontsize=16)
-# ax.set_yscale("log")  # optional; comment out if you prefer linear y
-# ax.grid(True, ls="--", alpha=0.5)
-# ax.legend(ncol=2, fontsize=14)
-# fig.tight_layout()
-# fig.savefig(f"mu_vs_fNL_M{int(M_fnl):d}.pdf", bbox_inches="tight")
-# fig.savefig(f"mu_vs_fNL_M{int(M_fnl):d}.png", dpi=300, bbox_inches="tight")
-# plt.show()
-
-
+    fig.tight_layout()
+    fig.savefig(f"mu_vs_beta_pzoo_M{int(M_single):d}.pdf", bbox_inches="tight")
+    fig.savefig(f"mu_vs_beta_pzoo_M{int(M_single):d}.png", dpi=300, bbox_inches="tight")
+    plt.show()
 ############################################################################################################
 
-# # === Plot E: beta_at_mu_limit vs p  AND  vs f_NL  (single mass) ===
-# M_star = 1e4                 # choose the seed mass you want to diagnose
-# p_scan = np.linspace(1.0, 3.0, 17)
-# fNL_scan = np.linspace(-0.5, 2.0, 21)
+if RUN_PLOT_MU_VS_FNL:
+    # === Plot E: μ vs f_NL at fixed β for one mass (quadratic local NG only) ===
+    M_fnl    = PLOT_FNL_MASS
+    betas    = PLOT_FNL_BETAS
+    fNL_grid = PLOT_FNL_GRID
 
-# # variance cap from FIRAS at this mass:
-# sigma2_cap = MU_LIMIT / (2.2 * window_factor(k_from_mass(M_star)))
+    fig, ax = plt.subplots()
+    for beta_target in betas:
+        mu_vals = [mu_from_fNL_at_beta(M_fnl, f, beta_target) for f in fNL_grid]
+        ax.plot(fNL_grid, mu_vals, lw=2.5, label=rf"$\beta={beta_target:.0e}$")
 
-# # p-PDF path: β_μlim(p) = β(σ = sqrt(sigma2_cap), p)
-# beta_mu_lim_p = [beta_from_sigma_true(np.sqrt(sigma2_cap), p) for p in p_scan]
+    # guides and labels in your style
+    ax.axhline(MU_LIMIT, ls="--", c="red", label=r"$\mu_{
+m max}$ (COBE/FIRAS)", lw=2.5)
+    ax.set_xlabel(r"$f_{\mathrm{NL}}$", fontsize=20)
+    ax.set_ylabel(r"Spectral distortion $\mu$", fontsize=20)
+    ax.set_title(rf"$M=10^{{{int(np.log10(M_fnl))}}}\,M_\odot$", fontsize=16)
+    ax.set_yscale("log")  # optional; comment out if you prefer linear y
+    ax.grid(True, ls="--", alpha=0.5)
+    ax.legend(ncol=2, fontsize=14)
+    fig.tight_layout()
+    fig.savefig(f"mu_vs_fNL_M{int(M_fnl):d}.pdf", bbox_inches="tight")
+    fig.savefig(f"mu_vs_fNL_M{int(M_fnl):d}.png", dpi=300, bbox_inches="tight")
+    plt.show()
+############################################################################################################
 
-# # local-NG path: solve σ_g at μ-limit then β(σ_g, fNL)
-# def sigma_g2_at_mu_cap(fNL):
-#     A = (18.0/25.0) * (fNL**2)  # coefficient in σ^2 = s + A s^2 (s ≡ σ_g^2)
-#     if A == 0.0:
-#         return sigma2_cap  # Gaussian case
-#     # positive root of A s^2 + s - sigma2_cap = 0
-#     return ( -1.0 + np.sqrt(1.0 + 4.0*A*sigma2_cap) ) / (2.0*A)
+if RUN_PLOT_BETA_AT_MU_LIMIT:
+    # === Plot E: beta_at_mu_limit vs p  AND  vs f_NL  (single mass) ===
+    M_star = PLOT_BETA_AT_MU_LIMIT_MASS
+    p_scan = PLOT_BETA_AT_MU_LIMIT_P_SCAN
+    fNL_scan = PLOT_BETA_AT_MU_LIMIT_FNL_SCAN
 
-# beta_mu_lim_f = []
-# for f in fNL_scan:
-#     s_g2 = sigma_g2_at_mu_cap(f)
-#     s_g  = np.sqrt(max(s_g2, 0.0))
-#     beta_mu_lim_f.append(beta_from_sigma_fNL(s_g, f))
+    # variance cap from FIRAS at this mass:
+    sigma2_cap = MU_LIMIT / (2.2 * window_factor(k_from_mass(M_star)))
 
-# # --- Plot (two panels to avoid clutter) ---
-# fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4.8), sharey=True)
+    # p-PDF path: β_μlim(p) = β(σ = sqrt(sigma2_cap), p)
+    beta_mu_lim_p = [beta_from_sigma_true(np.sqrt(sigma2_cap), p) for p in p_scan]
 
-# ax1.plot(p_scan, beta_mu_lim_p, lw=2)
-# ax1.set_xlabel(r"$p$")
-# ax1.set_ylabel(r"$\beta$ at $\mu=\mu_{\rm lim}$")
-# # ax1.set_title(rf"$M={M_star:.0f}\,M_\odot$: $\beta_{\mu\text{-lim}}(p)$")
-# ax1.set_yscale("log")
-# ax1.grid(True, ls="--", alpha=0.5)
+    # local-NG path: solve σ_g at μ-limit then β(σ_g, fNL)
+    def sigma_g2_at_mu_cap(fNL):
+        A = (18.0/25.0) * (fNL**2)  # coefficient in σ^2 = s + A s^2 (s ≡ σ_g^2)
+        if A == 0.0:
+            return sigma2_cap  # Gaussian case
+        # positive root of A s^2 + s - sigma2_cap = 0
+        return ( -1.0 + np.sqrt(1.0 + 4.0*A*sigma2_cap) ) / (2.0*A)
 
-# ax2.plot(fNL_scan, beta_mu_lim_f, lw=2)
-# ax2.set_xlabel(r"$f_{\rm NL}$")
-# # ax2.set_title(rf"$M={M_star:.0f}\,M_\odot$: $\beta_{\mu\text{-lim}}(f_{{\rm NL}})$")
-# ax2.grid(True, ls="--", alpha=0.5)
+    beta_mu_lim_f = []
+    for f in fNL_scan:
+        s_g2 = sigma_g2_at_mu_cap(f)
+        s_g  = np.sqrt(max(s_g2, 0.0))
+        beta_mu_lim_f.append(beta_from_sigma_fNL(s_g, f))
 
-# fig.tight_layout()
-# fig.savefig(f"beta_at_mu_limit_M{int(M_star):d}.pdf", bbox_inches="tight")
-# fig.savefig(f"beta_at_mu_limit_M{int(M_star):d}.png", dpi=300, bbox_inches="tight")
-# plt.show()
+    # --- Plot (two panels to avoid clutter) ---
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4.8), sharey=True)
 
+    ax1.plot(p_scan, beta_mu_lim_p, lw=2)
+    ax1.set_xlabel(r"$p$")
+    ax1.set_ylabel(r"$\beta$ at $\mu=\mu_{
+m lim}$")
+    ax1.set_yscale("log")
+    ax1.grid(True, ls="--", alpha=0.5)
 
+    ax2.plot(fNL_scan, beta_mu_lim_f, lw=2)
+    ax2.set_xlabel(r"$f_{
+m NL}$")
+    ax2.grid(True, ls="--", alpha=0.5)
 
-
+    fig.tight_layout()
+    fig.savefig(f"beta_at_mu_limit_M{int(M_star):d}.pdf", bbox_inches="tight")
+    fig.savefig(f"beta_at_mu_limit_M{int(M_star):d}.png", dpi=300, bbox_inches="tight")
+    plt.show()
 
 
 # =============================================================================
 # NEW BLOCKS: μ(p) at fixed β* and mass M* (ζ-based toy p-PDF)
 
 if RUN_MU_VS_P_MULTI_BETA:
-    M_star     = 1e4                             # representative SMBH-seed mass [M_sun]
-    beta_list  = [1e-20, 1e-15, 1e-12]           # a few target PBH abundances
-    p_grid     = np.linspace(0.4, 2.4, 11)       # scan tail index p
+    M_star     = MU_VS_P_MULTI_BETA_MASS
+    beta_list  = MU_VS_P_MULTI_BETA_LIST
+    p_grid     = MU_VS_P_MULTI_BETA_P_GRID
 
     fig, ax = plt.subplots()
 
@@ -983,22 +911,18 @@ if RUN_MU_VS_P_MULTI_BETA:
 # # =============================================================================
 
 if RUN_BETA_MU_LIMIT_VS_P_MULTI_M:
-    # --- User choices ---
-    M_list  = [1e4, 1e5, 1e7]                # masses in M_sun
-    p_grid  = np.linspace(0.4, 1.4, 11)      # tail index p-range
-
     fig, ax = plt.subplots()
-    colors = plt.cm.viridis(np.linspace(0, 1, len(M_list)))
+    colors = plt.cm.viridis(np.linspace(0, 1, len(BETA_MU_LIMIT_MASS_LIST)))
 
-    for M_star, col in zip(M_list, colors):
+    for M_star, col in zip(BETA_MU_LIMIT_MASS_LIST, colors):
         # variance cap from μ-limit at this mass:
         sigma2_cap = MU_LIMIT / (2.2 * window_factor(k_from_mass(M_star)))
         sigma_cap  = np.sqrt(sigma2_cap)
 
-        beta_mu_lim = [beta_from_sigma_true(sigma_cap, p) for p in p_grid]
+        beta_mu_lim = [beta_from_sigma_true(sigma_cap, p) for p in BETA_MU_LIMIT_P_GRID]
         beta_mu_lim = np.array(beta_mu_lim)
 
-        ax.plot(p_grid, beta_mu_lim, "o-", lw=2.5, color=col,
+        ax.plot(BETA_MU_LIMIT_P_GRID, beta_mu_lim, "o-", lw=2.5, color=col,
                 label=rf"$M=10^{{{int(np.log10(M_star))}}}\,M_\odot$")
 
     ax.set_xlabel(r"Tail index $p$ in $P(\zeta)\propto e^{-|\zeta|^p}$", fontsize=18)
@@ -1403,7 +1327,7 @@ if RUN_CAI_MU_VS_BETA:
 ####################################################################################################
 
 if RUN_CAI_BETA_VS_SIGMA2:
-    sG_grid_for_plot = np.logspace(-3, 0, 200)   # underlying Gaussian width range
+    sG_grid_for_plot = CAI_BETA_VS_SIGMA2_SG_GRID  # underlying Gaussian width range
     zeta_c_plot      = CAI_ZETA_C
 
     figB, axB = plt.subplots()
@@ -1474,7 +1398,7 @@ if RUN_CAI_BETA_VS_SIGMA2:
 ####################################################################################################
 
 if RUN_CAI_BETA_VS_MASS:
-    mass_grid = np.logspace(4, 8, 25)  # Msun grid for the plot
+    mass_grid = CAI_BETA_VS_MASS_GRID  # Msun grid for the plot
 
     figC, axC = plt.subplots()
     colors = plt.cm.viridis(np.linspace(0, 1, len(CAI_H_VALUES)))
