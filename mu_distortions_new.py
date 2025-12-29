@@ -1,103 +1,62 @@
+"""
+Toy PDF + upward-step (Cai et al.) models for PBH abundance and μ-distortions.
+
+This script:
+  1) Defines mappings between PBH mass scale and μ-distortion response.
+  2) Implements a generalized-normal ("p-PDF") toy model for ζ.
+  3) Implements Cai et al.'s upward-step non-Gaussian model.
+  4) Produces several comparison plots (toggle with RUN_* flags below).
+
+Notes for readers:
+  - Most "physics logic" lives in the function blocks.
+  - The plot blocks at the bottom are intentionally verbose but guarded by flags.
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 from math import gamma
-from matplotlib import rcParams
-from matplotlib import rc
-from matplotlib.patches import FancyArrowPatch
-# from math import sin, cos, sqrt, gamma, exp
-# activate latex text rendering
-# plt.rc('text', usetex=True)
-
-#LaTex setting
-plt.rcParams['text.latex.preamble']=r"\usepackage{amsmath}"
-plt.rcParams['text.latex.preamble'] = r'\boldmath'
 
 
-#Plot setting:
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-plt.rcParams['figure.figsize'] = (10, 7)
-plt.rcParams['font.size'] = 11
-plt.rcParams['text.latex.preamble'] = r'\usepackage{amssymb}'
-plt.rcParams['text.latex.preamble'] = r'\usepackage{amsmath}\usepackage{color}\usepackage{amssymb}\boldmath'
-plt.rcParams['text.latex.preamble'] = r'\usepackage{amsmath}\usepackage{xcolor}\usepackage{amssymb}\boldmath'
+def configure_plot_style(use_tex=True):
+    """Centralize plotting style so the rest of the file is easier to read."""
+    # If you want to disable LaTeX (e.g., on a machine without TeX),
+    # set use_tex=False below or override before calling this function.
+    plt.rc("text", usetex=use_tex)
+    plt.rcParams["text.latex.preamble"] = (
+        r"\usepackage{amsmath}"
+        r"\usepackage{amssymb}"
+        r"\usepackage{xcolor}"
+        r"\boldmath"
+    )
 
-# If you want to enable usetex, set USE_TEX=True and ensure LaTeX is installed
-# (kept from your previous draft)
-# USE_TEX = False
-# plt.rc('text', usetex=USE_TEX)
+    # Global figure defaults.
+    plt.rcParams["figure.figsize"] = (10, 7)
+    plt.rcParams["font.size"] = 11
 
-# === Active, unified LaTeX setup matching your demo style ===
-plt.rc('text', usetex=True)  # requires LaTeX installed
-plt.rcParams['text.latex.preamble'] = (
-    r'\usepackage{amsmath}'
-    r'\usepackage{amssymb}'
-    r'\usepackage{xcolor}'
-    r'\boldmath'
-)
+    # Axes + ticks styling.
+    plt.rcParams["axes.labelsize"] = plt.rcParams["font.size"]
+    plt.rcParams["axes.titlesize"] = 1.4 * plt.rcParams["font.size"]
+    plt.rcParams["xtick.labelsize"] = 1.4 * plt.rcParams["font.size"]
+    plt.rcParams["ytick.labelsize"] = 1.4 * plt.rcParams["font.size"]
+    plt.rcParams["axes.linewidth"] = 1
 
-#LaTex setting
-# original preamble lines preserved below (some users toggle these when usetex=True)
-# plt.rcParams['text.latex.preamble']=r"\usepackage{amsmath}"
-# plt.rcParams['text.latex.preamble'] = r'\boldmath'
+    plt.rcParams["xtick.major.size"] = 3
+    plt.rcParams["xtick.minor.size"] = 3
+    plt.rcParams["xtick.major.width"] = 1
+    plt.rcParams["xtick.minor.width"] = 1
+    plt.rcParams["ytick.major.size"] = 3
+    plt.rcParams["ytick.minor.size"] = 3
+    plt.rcParams["ytick.major.width"] = 1
+    plt.rcParams["ytick.minor.width"] = 1
+
+    # Ticks on left/bottom only (avoids implicit gca() calls at import time).
+    plt.rcParams["xtick.top"] = False
+    plt.rcParams["xtick.bottom"] = True
+    plt.rcParams["ytick.left"] = True
+    plt.rcParams["ytick.right"] = False
 
 
-#Plot setting:
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-plt.rcParams['figure.figsize'] = (10, 7)
-plt.rcParams['font.size'] = 11
-# preserve original preamble assignments as comments (do not delete)
-# plt.rcParams['text.latex.preamble'] = r'\usepackage{amssymb}'
-# plt.rcParams['text.latex.preamble'] = r'\usepackage{amsmath}\usepackage{color}\usepackage{amssymb}\boldmath'
-# plt.rcParams['text.latex.preamble'] = r'\usepackage{amsmath}\usepackage{xcolor}\usepackage{amssymb}\boldmath'
-
-#plt.rcParams['font.family'] = 'Times New Roman'
-
-plt.rcParams['axes.labelsize'] = plt.rcParams['font.size']
-plt.rcParams['axes.titlesize'] = 1.4*plt.rcParams['font.size']
-#plt.rcParams['legend.fontsize'] = plt.rcParams['font.size']
-plt.rcParams['xtick.labelsize'] = 1.4*plt.rcParams['font.size']
-plt.rcParams['ytick.labelsize'] = 1.4*plt.rcParams['font.size']
-# dots per inch: dpi
-#plt.rcParams['savefig.dpi'] = 2*plt.rcParams['savefig.dpi']
-
-plt.rcParams['xtick.major.size'] = 3
-plt.rcParams['xtick.minor.size'] = 3
-plt.rcParams['xtick.major.width'] = 1
-plt.rcParams['xtick.minor.width'] = 1
-plt.rcParams['ytick.major.size'] = 3
-plt.rcParams['ytick.minor.size'] = 3
-plt.rcParams['ytick.major.width'] = 1
-plt.rcParams['ytick.minor.width'] = 1
-
-#legends
-#plt.rcParams['legend.frameon'] = False
-#plt.rcParams['legend.loc'] = 'center left'
-#plt.rcParams['legend.fontsize'] = plt.rcParams['font.size']
-
-plt.rcParams['axes.linewidth'] = 1
-
-#border setting
-#plt.gca().spines['right'].set_color('none')
-#plt.gca().spines['top'].set_color('none')
-
-#ticks position setting
-# original active calls that create a figure at import time are preserved as comments:
-# plt.gca().xaxis.set_ticks_position('bottom')
-# plt.gca().yaxis.set_ticks_position('left')
-
-# safer alternative (no figure creation at import time):
-plt.rcParams['xtick.top'] = False
-plt.rcParams['xtick.bottom'] = True
-plt.rcParams['ytick.left'] = True
-plt.rcParams['ytick.right'] = False
-
-#f = plt.figure()
-#ax = f.add_subplot(111)
-#ax.tick_params(labeltop=False, labelright=True)
-#If we don't want to use x-axis and y-axis values.
-#plt.gca().axes.xaxis.set_ticks([])
-#plt.gca().axes.yaxis.set_ticks([]) 
-#!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+configure_plot_style(use_tex=True)
 
 
 
@@ -106,25 +65,29 @@ plt.rcParams['ytick.right'] = False
 # ---- Mappings ----
 
 def k_from_mass(M_sun):
+    """Map PBH mass (M_sun) to the characteristic wavenumber k [Mpc^-1]."""
     return 92.0 * np.sqrt(5e8 / M_sun)
 
 def window_factor(k):
+    """Silk damping window factor W(k) entering the μ response."""
     k = np.asarray(k, float)
     a = np.exp(-k/5400.0)
     b = k/31.6
     return a - np.where(b > 50.0, 0.0, np.exp(-b*b))  # avoid underflow noise
 
 def mu_of_sigma2_true(s2_true, M_sun):
+    """μ-distortion amplitude for a given true variance and mass scale."""
     return 2.2 * np.asarray(s2_true, float) * window_factor(k_from_mass(M_sun))
 
 # Variance map: σ_true^2 = C(p) * σ̃^2
 def C_of_p(p):
+    """Variance conversion factor for the generalized-normal p-PDF."""
     return (2.0 * gamma(1.0 + 3.0/p)) / (3.0 * gamma(1.0 + 1.0/p))
 
 # ---- Settings you can change ----
 MU_LIMIT = 9e-5
-mass_list = [1e4, 1e5, 1e7]     # four distinct masses (Msun)
-p_values  = [0.6]     # plot both on same figure
+mass_list = [1e4, 1e5, 1e7]          # representative masses (M_sun)
+p_values  = [0.6]                    # tail index for toy p-PDF examples
 s2tilde_grid = np.logspace(-7, -1, 400)  # x-axis = σ̃^2 (NCS parameter)
 
 # ---- Plot all 8 curves ----
@@ -953,50 +916,52 @@ def sigma2_Cl_dirac_like(kstar, amp=0.01, r_m=None, sigma_ln=0.02):
 # =============================================================================
 # NEW BLOCKS: μ(p) at fixed β* and mass M* (ζ-based toy p-PDF)
 
+RUN_MU_VS_P_MULTI_BETA = True
 
-M_star     = 1e4                             # representative SMBH-seed mass [M_sun]
-beta_list  = [1e-20, 1e-15, 1e-12]           # a few target PBH abundances
-p_grid     = np.linspace(0.4, 2.4, 11)       # scan tail index p
+if RUN_MU_VS_P_MULTI_BETA:
+    M_star     = 1e4                             # representative SMBH-seed mass [M_sun]
+    beta_list  = [1e-20, 1e-15, 1e-12]           # a few target PBH abundances
+    p_grid     = np.linspace(0.4, 2.4, 11)       # scan tail index p
 
-fig, ax = plt.subplots()
+    fig, ax = plt.subplots()
 
-colors = plt.cm.plasma(np.linspace(0, 1, len(beta_list)))
+    colors = plt.cm.plasma(np.linspace(0, 1, len(beta_list)))
 
-for beta_star, col in zip(beta_list, colors):
-    mu_vals = []
-    for p in p_grid:
-        # invert β(σ,p) = β_*  →  σ_true(p)
-        sigma_true = sigma_true_for_beta(beta_star, p)
-        # μ(σ_true^2, M_star)
-        mu_val = mu_of_sigma2_true(sigma_true**2, M_star)
-        mu_vals.append(mu_val)
+    for beta_star, col in zip(beta_list, colors):
+        mu_vals = []
+        for p in p_grid:
+            # invert β(σ,p) = β_*  →  σ_true(p)
+            sigma_true = sigma_true_for_beta(beta_star, p)
+            # μ(σ_true^2, M_star)
+            mu_val = mu_of_sigma2_true(sigma_true**2, M_star)
+            mu_vals.append(mu_val)
 
-    mu_vals = np.array(mu_vals)
-    ax.plot(p_grid, mu_vals, 'o-', lw=2.5, color=col,
-            label=rf"$\beta={beta_star:.0e}$")
+        mu_vals = np.array(mu_vals)
+        ax.plot(p_grid, mu_vals, "o-", lw=2.5, color=col,
+                label=rf"$\beta={beta_star:.0e}$")
 
-# COBE/FIRAS limit
-ax.axhline(MU_LIMIT, ls="--", c="red", lw=2.0, label=r"$\mu_{\rm max}$")
+    # COBE/FIRAS limit
+    ax.axhline(MU_LIMIT, ls="--", c="red", lw=2.0, label=r"$\mu_{\rm max}$")
 
-# Optional: mark Gaussian case p=2
-ax.axvline(2.0, ls=":", c="gray", lw=1.5)
+    # Optional: mark Gaussian case p=2
+    ax.axvline(2.0, ls=":", c="gray", lw=1.5)
 
-ax.set_xlabel(r"Tail index $p$ in $P(\zeta)\propto e^{-|\zeta|^p}$", fontsize=18)
-ax.set_ylabel(r"Spectral distortion $\mu$", fontsize=18)
-ax.set_title(
-    rf"$\mu(p)$ for several $\beta$ at "
-    rf"$M=10^{{{int(np.log10(M_star))}}}\,M_\odot$",
-    fontsize=16
-)
+    ax.set_xlabel(r"Tail index $p$ in $P(\zeta)\propto e^{-|\zeta|^p}$", fontsize=18)
+    ax.set_ylabel(r"Spectral distortion $\mu$", fontsize=18)
+    ax.set_title(
+        rf"$\mu(p)$ for several $\beta$ at "
+        rf"$M=10^{{{int(np.log10(M_star))}}}\,M_\odot$",
+        fontsize=16
+    )
 
-ax.set_yscale("log")
-ax.grid(True, ls="--", alpha=0.5)
-ax.legend(fontsize=12)
+    ax.set_yscale("log")
+    ax.grid(True, ls="--", alpha=0.5)
+    ax.legend(fontsize=12)
 
-fig.tight_layout()
-fig.savefig(f"mu_vs_p_multi_beta_M{int(M_star):d}.pdf", bbox_inches="tight")
-fig.savefig(f"mu_vs_p_multi_beta_M{int(M_star):d}.png", dpi=300, bbox_inches="tight")
-plt.show()
+    fig.tight_layout()
+    fig.savefig(f"mu_vs_p_multi_beta_M{int(M_star):d}.pdf", bbox_inches="tight")
+    fig.savefig(f"mu_vs_p_multi_beta_M{int(M_star):d}.png", dpi=300, bbox_inches="tight")
+    plt.show()
 
 
 
@@ -1009,36 +974,39 @@ plt.show()
 # # NEW PLOT 2 (multi-M): β_max(p) at μ = μ_limit for several masses
 # # =============================================================================
 
-# # # # --- User choices ---
-M_list  = [1e4, 1e5, 1e7]                # masses in M_sun
-p_grid  = np.linspace(0.4, 1.4, 11)      # tail index p-range
+RUN_BETA_MU_LIMIT_VS_P_MULTI_M = True
 
-fig, ax = plt.subplots()
-colors = plt.cm.viridis(np.linspace(0, 1, len(M_list)))
+if RUN_BETA_MU_LIMIT_VS_P_MULTI_M:
+    # --- User choices ---
+    M_list  = [1e4, 1e5, 1e7]                # masses in M_sun
+    p_grid  = np.linspace(0.4, 1.4, 11)      # tail index p-range
 
-for M_star, col in zip(M_list, colors):
-    # variance cap from μ-limit at this mass:
-    sigma2_cap = MU_LIMIT / (2.2 * window_factor(k_from_mass(M_star)))
-    sigma_cap  = np.sqrt(sigma2_cap)
+    fig, ax = plt.subplots()
+    colors = plt.cm.viridis(np.linspace(0, 1, len(M_list)))
 
-    beta_mu_lim = [beta_from_sigma_true(sigma_cap, p) for p in p_grid]
-    beta_mu_lim = np.array(beta_mu_lim)
+    for M_star, col in zip(M_list, colors):
+        # variance cap from μ-limit at this mass:
+        sigma2_cap = MU_LIMIT / (2.2 * window_factor(k_from_mass(M_star)))
+        sigma_cap  = np.sqrt(sigma2_cap)
 
-    ax.plot(p_grid, beta_mu_lim, 'o-', lw=2.5, color=col,
-            label=rf"$M=10^{{{int(np.log10(M_star))}}}\,M_\odot$")
+        beta_mu_lim = [beta_from_sigma_true(sigma_cap, p) for p in p_grid]
+        beta_mu_lim = np.array(beta_mu_lim)
 
-ax.set_xlabel(r"Tail index $p$ in $P(\zeta)\propto e^{-|\zeta|^p}$", fontsize=18)
-ax.set_ylabel(r"Max. PBH fraction $\beta_{\mu\text{-lim}}(p)$", fontsize=18)
-ax.set_title(r"$\beta_{\mu\text{-lim}}(p)$ at $\mu=\mu_{\rm max}$", fontsize=16)
+        ax.plot(p_grid, beta_mu_lim, "o-", lw=2.5, color=col,
+                label=rf"$M=10^{{{int(np.log10(M_star))}}}\,M_\odot$")
 
-ax.set_yscale("log")
-ax.grid(True, ls="--", alpha=0.5)
-ax.legend(fontsize=12)
+    ax.set_xlabel(r"Tail index $p$ in $P(\zeta)\propto e^{-|\zeta|^p}$", fontsize=18)
+    ax.set_ylabel(r"Max. PBH fraction $\beta_{\mu\text{-lim}}(p)$", fontsize=18)
+    ax.set_title(r"$\beta_{\mu\text{-lim}}(p)$ at $\mu=\mu_{\rm max}$", fontsize=16)
 
-fig.tight_layout()
-fig.savefig("beta_at_mu_limit_vs_p_multiM.pdf", bbox_inches="tight")
-fig.savefig("beta_at_mu_limit_vs_p_multiM.png", dpi=300, bbox_inches="tight")
-plt.show()
+    ax.set_yscale("log")
+    ax.grid(True, ls="--", alpha=0.5)
+    ax.legend(fontsize=12)
+
+    fig.tight_layout()
+    fig.savefig("beta_at_mu_limit_vs_p_multiM.pdf", bbox_inches="tight")
+    fig.savefig("beta_at_mu_limit_vs_p_multiM.png", dpi=300, bbox_inches="tight")
+    plt.show()
 
 
 
@@ -1325,54 +1293,61 @@ if RUN_CAI_SANITY:
     plt.show()
 
 ####################################################################################################
+# Shared plot parameters for the Cai model (used in multiple figures).
+# (Feel free to tweak these once and let all Cai plots update together.)
+CAI_H_VALUES = [-0.5, -1.0, -2.5]
+CAI_ZETA_C = 0.67
+
+####################################################################################################
 #  Plot A: μ(β) at fixed mass, comparing p-type ζ vs Cai upward step
 #
 #  - Uses the existing beta_grid, M_cmp and p_list_small from your p-type ζ/compaction block.
 #  - Overlays:
 #      * p-type ζ curves: μ(β; p) from mu_from_beta_zeta,
 #      * Cai curves: μ(β; h) from cai_mu_from_beta.
+#
+#  (Toggle with RUN_CAI_MU_VS_BETA to skip this figure.)
 ####################################################################################################
 
-h_values = [-0.5, -1.0, -2.5]    # Cai step parameters to show
-zeta_c   = 0.67              
-    # same collapse threshold as in ζ-based plots
+RUN_CAI_MU_VS_BETA = True
 
-fig, ax = plt.subplots()
+if RUN_CAI_MU_VS_BETA:
+    fig, ax = plt.subplots()
 
-# p-type ζ curves (already defined via sigma_true_for_beta + mu_of_sigma2_true)
-for p in p_list_small:
-    mu_zet = [mu_from_beta_zeta(b, p) for b in beta_grid]
-    ax.loglog(beta_grid, mu_zet, '--', lw=2.3,
-              label=rf"$p$-type $\zeta$, $p={p:g}$")
+    # p-type ζ curves (already defined via sigma_true_for_beta + mu_of_sigma2_true)
+    for p in p_list_small:
+        mu_zet = [mu_from_beta_zeta(b, p) for b in beta_grid]
+        ax.loglog(beta_grid, mu_zet, "--", lw=2.3,
+                  label=rf"$p$-type $\zeta$, $p={p:g}$")
 
-# Cai upward-step curves
-for h in h_values:
-    mu_cai = [cai_mu_from_beta(b, h, M_cmp, zeta_c=zeta_c) for b in beta_grid]
-    ax.loglog(beta_grid, mu_cai, '-', lw=2.4,
-              label=rf"Cai step, $h={h}$")
+    # Cai upward-step curves
+    for h in CAI_H_VALUES:
+        mu_cai = [cai_mu_from_beta(b, h, M_cmp, zeta_c=CAI_ZETA_C) for b in beta_grid]
+        ax.loglog(beta_grid, mu_cai, "-", lw=2.4,
+                  label=rf"Cai step, $h={h}$")
 
-# μ upper limit (FIRAS)
-ax.axhline(MU_LIMIT, ls="--", c="red", lw=2.0, label=r"$\mu_{\rm max}$")
+    # μ upper limit (FIRAS)
+    ax.axhline(MU_LIMIT, ls="--", c="red", lw=2.0, label=r"$\mu_{\rm max}$")
 
-ax.set_xscale("log")
-ax.set_yscale("log")
-ax.set_xlim(beta_grid.min(), beta_grid.max())
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    ax.set_xlim(beta_grid.min(), beta_grid.max())
 
-ax.set_xlabel(r"PBH mass fraction at formation $\beta$", fontsize=20)
-ax.set_ylabel(r"Spectral distortion $\mu$", fontsize=20)
-ax.grid(True, ls="--", alpha=0.5)
-ax.legend(ncol=1, fontsize=11)
+    ax.set_xlabel(r"PBH mass fraction at formation $\beta$", fontsize=20)
+    ax.set_ylabel(r"Spectral distortion $\mu$", fontsize=20)
+    ax.grid(True, ls="--", alpha=0.5)
+    ax.legend(ncol=1, fontsize=11)
 
-ax.set_title(
-    rf"$M = 10^{{{int(np.log10(M_cmp))}}}\,M_\odot$: "
-    r"$\mu(\beta)$, $p$-type $\zeta$ vs Cai upward step",
-    fontsize=15
-)
+    ax.set_title(
+        rf"$M = 10^{{{int(np.log10(M_cmp))}}}\,M_\odot$: "
+        r"$\mu(\beta)$, $p$-type $\zeta$ vs Cai upward step",
+        fontsize=15
+    )
 
-fig.tight_layout()
-fig.savefig(f"mu_vs_beta_Cai_vs_p_M{int(M_cmp):d}.pdf",  bbox_inches="tight")
-fig.savefig(f"mu_vs_beta_Cai_vs_p_M{int(M_cmp):d}.png",  dpi=300, bbox_inches="tight")
-plt.show()
+    fig.tight_layout()
+    fig.savefig(f"mu_vs_beta_Cai_vs_p_M{int(M_cmp):d}.pdf",  bbox_inches="tight")
+    fig.savefig(f"mu_vs_beta_Cai_vs_p_M{int(M_cmp):d}.png",  dpi=300, bbox_inches="tight")
+    plt.show()
 
 ####################################################################################################
 #  Plot B: β vs σ_true^2 at fixed mass, for different h (Cai) + Gaussian baseline
@@ -1381,64 +1356,69 @@ plt.show()
 #  - y-axis: β from the Cai model (non-trapped branch).
 #  - Curves: different h values, plus a Gaussian (erfc) reference.
 #  - We also mark the μ-limit as a vertical line in σ_true^2.
+#
+#  (Toggle with RUN_CAI_BETA_VS_SIGMA2 to skip this figure.)
 ####################################################################################################
 
-sG_grid_for_plot = np.logspace(-3, 0, 200)   # underlying Gaussian width range
-zeta_c_plot      = 0.67
+RUN_CAI_BETA_VS_SIGMA2 = True
 
-figB, axB = plt.subplots()
-colors = plt.cm.plasma(np.linspace(0, 1, len(h_values)))
+if RUN_CAI_BETA_VS_SIGMA2:
+    sG_grid_for_plot = np.logspace(-3, 0, 200)   # underlying Gaussian width range
+    zeta_c_plot      = CAI_ZETA_C
 
-for color, h in zip(colors, h_values):
-    sigma2_true_vals = []
-    beta_vals        = []
+    figB, axB = plt.subplots()
+    colors = plt.cm.plasma(np.linspace(0, 1, len(CAI_H_VALUES)))
 
-    for sG in sG_grid_for_plot:
-        s2_true = cai_sigma2_true_from_sigmaG(sG, h)
-        beta    = cai_beta_from_sigmaG(sG, h, zeta_c=zeta_c_plot)
-        sigma2_true_vals.append(s2_true)
-        beta_vals.append(beta)
+    for color, h in zip(colors, CAI_H_VALUES):
+        sigma2_true_vals = []
+        beta_vals        = []
 
-    sigma2_true_vals = np.array(sigma2_true_vals)
-    beta_vals        = np.array(beta_vals)
+        for sG in sG_grid_for_plot:
+            s2_true = cai_sigma2_true_from_sigmaG(sG, h)
+            beta    = cai_beta_from_sigmaG(sG, h, zeta_c=zeta_c_plot)
+            sigma2_true_vals.append(s2_true)
+            beta_vals.append(beta)
 
-    idx = np.argsort(sigma2_true_vals)
-    sigma2_true_vals = sigma2_true_vals[idx]
-    beta_vals        = beta_vals[idx]
+        sigma2_true_vals = np.array(sigma2_true_vals)
+        beta_vals        = np.array(beta_vals)
 
-    axB.loglog(sigma2_true_vals, beta_vals, lw=2.3, color=color,
-               label=rf"Cai, $h={h}$")
+        idx = np.argsort(sigma2_true_vals)
+        sigma2_true_vals = sigma2_true_vals[idx]
+        beta_vals        = beta_vals[idx]
 
-# Gaussian reference: β_G(σ_true) = 0.5 erfc(ζ_c / (sqrt(2) σ_true)).
-from math import erfc
-s2_gauss = np.logspace(-8, -0.5, 200)
-sigma_gauss = np.sqrt(s2_gauss)
-beta_gauss  = 0.5 * erfc(zeta_c_plot / (np.sqrt(2.0) * sigma_gauss))
-axB.loglog(s2_gauss, beta_gauss, 'k--', lw=2.0, label=r"Gaussian tail")
+        axB.loglog(sigma2_true_vals, beta_vals, lw=2.3, color=color,
+                   label=rf"Cai, $h={h}$")
 
-# Vertical line at σ_true^2 corresponding to μ = μ_max at this mass.
-k_star_cmp   = k_from_mass(M_cmp)
-W_mu_cmp     = window_factor(k_star_cmp)
-sigma2_muLim = MU_LIMIT / (2.2 * W_mu_cmp)
+    # Gaussian reference: β_G(σ_true) = 0.5 erfc(ζ_c / (sqrt(2) σ_true)).
+    from math import erfc
+    s2_gauss = np.logspace(-8, -0.5, 200)
+    sigma_gauss = np.sqrt(s2_gauss)
+    beta_gauss  = 0.5 * erfc(zeta_c_plot / (np.sqrt(2.0) * sigma_gauss))
+    axB.loglog(s2_gauss, beta_gauss, "k--", lw=2.0, label=r"Gaussian tail")
 
-axB.axvline(sigma2_muLim, color="red", ls=":", lw=2.0,
-            label=r"$\sigma_{\rm true}^2$ at $\mu_{\rm max}$")
+    # Vertical line at σ_true^2 corresponding to μ = μ_max at this mass.
+    k_star_cmp   = k_from_mass(M_cmp)
+    W_mu_cmp     = window_factor(k_star_cmp)
+    sigma2_muLim = MU_LIMIT / (2.2 * W_mu_cmp)
 
-axB.set_xscale("log")
-axB.set_yscale("log")
+    axB.axvline(sigma2_muLim, color="red", ls=":", lw=2.0,
+                label=r"$\sigma_{\rm true}^2$ at $\mu_{\rm max}$")
 
-axB.set_xlabel(r"True variance $\sigma_{\rm true}^2$ on PBH scale", fontsize=20)
-axB.set_ylabel(r"PBH mass fraction at formation $\beta$", fontsize=20)
-axB.grid(True, ls="--", alpha=0.5)
-axB.legend(fontsize=10, loc="lower right")
+    axB.set_xscale("log")
+    axB.set_yscale("log")
 
-axB.set_title(
-    rf"$M = 10^{{{int(np.log10(M_cmp))}}}\,M_\odot$: "
-    r"$\beta(\sigma_{\rm true}^2)$, Cai upward step vs Gaussian",
-    fontsize=15
-)
+    axB.set_xlabel(r"True variance $\sigma_{\rm true}^2$ on PBH scale", fontsize=20)
+    axB.set_ylabel(r"PBH mass fraction at formation $\beta$", fontsize=20)
+    axB.grid(True, ls="--", alpha=0.5)
+    axB.legend(fontsize=10, loc="lower right")
 
-figB.tight_layout()
-figB.savefig(f"beta_vs_sigma2_Cai_M{int(M_cmp):d}.pdf", bbox_inches="tight")
-figB.savefig(f"beta_vs_sigma2_Cai_M{int(M_cmp):d}.png", dpi=300, bbox_inches="tight")
-plt.show()
+    axB.set_title(
+        rf"$M = 10^{{{int(np.log10(M_cmp))}}}\,M_\odot$: "
+        r"$\beta(\sigma_{\rm true}^2)$, Cai upward step vs Gaussian",
+        fontsize=15
+    )
+
+    figB.tight_layout()
+    figB.savefig(f"beta_vs_sigma2_Cai_M{int(M_cmp):d}.pdf", bbox_inches="tight")
+    figB.savefig(f"beta_vs_sigma2_Cai_M{int(M_cmp):d}.png", dpi=300, bbox_inches="tight")
+    plt.show()
