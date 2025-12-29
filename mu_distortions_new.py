@@ -58,6 +58,14 @@ def configure_plot_style(use_tex=True):
 
 # Toggle LaTeX rendering here (set False if TeX is unavailable).
 USE_TEX = True
+
+# Plot toggles (set True for the figures you want to generate).
+# NOTE: Keeping these False by default prevents accidental multi-plot runs.
+RUN_MU_VS_P_MULTI_BETA = False
+RUN_BETA_MU_LIMIT_VS_P_MULTI_M = False
+RUN_CAI_MU_VS_BETA = False
+RUN_CAI_BETA_VS_SIGMA2 = False
+RUN_CAI_BETA_VS_MASS = False
 configure_plot_style(use_tex=USE_TEX)
 
 
@@ -918,8 +926,6 @@ def sigma2_Cl_dirac_like(kstar, amp=0.01, r_m=None, sigma_ln=0.02):
 # =============================================================================
 # NEW BLOCKS: μ(p) at fixed β* and mass M* (ζ-based toy p-PDF)
 
-RUN_MU_VS_P_MULTI_BETA = True
-
 if RUN_MU_VS_P_MULTI_BETA:
     M_star     = 1e4                             # representative SMBH-seed mass [M_sun]
     beta_list  = [1e-20, 1e-15, 1e-12]           # a few target PBH abundances
@@ -975,8 +981,6 @@ if RUN_MU_VS_P_MULTI_BETA:
 # # =============================================================================
 # # NEW PLOT 2 (multi-M): β_max(p) at μ = μ_limit for several masses
 # # =============================================================================
-
-RUN_BETA_MU_LIMIT_VS_P_MULTI_M = True
 
 if RUN_BETA_MU_LIMIT_VS_P_MULTI_M:
     # --- User choices ---
@@ -1349,8 +1353,6 @@ CAI_ZETA_C = 0.67
 #  (Toggle with RUN_CAI_MU_VS_BETA to skip this figure.)
 ####################################################################################################
 
-RUN_CAI_MU_VS_BETA = True
-
 if RUN_CAI_MU_VS_BETA:
     fig, ax = plt.subplots()
 
@@ -1399,8 +1401,6 @@ if RUN_CAI_MU_VS_BETA:
 #
 #  (Toggle with RUN_CAI_BETA_VS_SIGMA2 to skip this figure.)
 ####################################################################################################
-
-RUN_CAI_BETA_VS_SIGMA2 = True
 
 if RUN_CAI_BETA_VS_SIGMA2:
     sG_grid_for_plot = np.logspace(-3, 0, 200)   # underlying Gaussian width range
@@ -1472,8 +1472,6 @@ if RUN_CAI_BETA_VS_SIGMA2:
 #
 #  (Toggle with RUN_CAI_BETA_VS_MASS to skip this figure.)
 ####################################################################################################
-
-RUN_CAI_BETA_VS_MASS = True
 
 if RUN_CAI_BETA_VS_MASS:
     mass_grid = np.logspace(4, 8, 25)  # Msun grid for the plot
